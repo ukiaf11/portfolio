@@ -41,7 +41,7 @@
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
   border-radius: 16px;
   padding: 3rem;
   display: flex;
@@ -56,8 +56,8 @@
   gap: 1rem;
   padding: 1rem;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--contact-card-bg);
+  border: 1px solid var(--contact-card-border);
   color: var(--text-primary);
   text-decoration: none;
   font-family: var(--font-mono);
@@ -65,7 +65,7 @@
 }
 
 .link:hover {
-  background: rgba(34, 211, 238, 0.1);
+  background: var(--btn-secondary-hover-bg);
   border-color: var(--accent-cyan);
   color: var(--accent-cyan);
   transform: translateY(-2px);
