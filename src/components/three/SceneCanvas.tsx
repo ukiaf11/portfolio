@@ -15,7 +15,7 @@ export default function SceneCanvas() {
   if (!mounted) return null;
 
   return (
-    <div style={{
+    <div className="canvas-container" style={{
       position: 'fixed',
       top: 0,
       left: 0,
