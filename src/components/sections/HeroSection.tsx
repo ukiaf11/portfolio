@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import styles from './HeroSection.module.css';
-import GlowOrb from '../effects/GlowOrb';
 
 export default function HeroSection() {
   const [text, setText] = useState('');
@@ -23,9 +22,6 @@ export default function HeroSection() {
 
   return (
     <section id="home" className={styles.hero}>
-      {/* Ambient background fog */}
-      <GlowOrb color="var(--orb-color-1)" size={600} top="-10%" left="-10%" />
-      <GlowOrb color="var(--orb-color-2)" size={500} bottom="10%" right="-5%" delay={2} />
 
       <div className={styles.content}>
         <div className={styles.greeting}>

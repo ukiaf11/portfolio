@@ -6,7 +6,7 @@ import AboutSection from "@/components/sections/AboutSection";
 import ProjectsSection from "@/components/sections/ProjectsSection";
 import ExperienceSection from "@/components/sections/ExperienceSection";
 import ContactSection from "@/components/sections/ContactSection";
-import SceneCanvas from "@/components/three/SceneCanvas";
+import BackgroundGrid from "@/components/layout/BackgroundGrid";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 
 export default function Home() {
@@ -25,7 +25,7 @@ export default function Home() {
         <ContactSection />
       </div>
 
-      <SceneCanvas />
+      <BackgroundGrid />
     </main>
   );
 }

@@ -147,11 +147,6 @@ ul {
   border-radius: 12px;
 }
 
-/* Hides space starfield canvas in light mode to prevent glitchy star noise on white bg */
-[data-theme='light'] .canvas-container {
-  display: none !important;
-}
-
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -1,0 +1,81 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+.gridPattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(to right, var(--line-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line-color) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 20%, transparent 80%);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  will-change: transform;
+  mix-blend-mode: var(--orb-blend-mode, screen);
+  opacity: var(--orb-opacity, 0.4);
+  pointer-events: none;
+  transition: mix-blend-mode 0.3s ease, opacity 0.3s ease;
+}
+
+.orbCyan {
+  width: 600px;
+  height: 600px;
+  background: var(--orb-color-1);
+  top: -10%;
+  left: -10%;
+  animation: floatCyan 25s ease-in-out infinite alternate;
+}
+
+.orbViolet {
+  width: 500px;
+  height: 500px;
+  background: var(--orb-color-2);
+  bottom: 10%;
+  right: -5%;
+  animation: floatViolet 20s ease-in-out infinite alternate;
+}
+
+@keyframes floatCyan {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(50px, 80px, 0) scale(1.1);
+  }
+  100% {
+    transform: translate3d(-30px, 40px, 0) scale(0.9);
+  }
+}
+
+@keyframes floatViolet {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-60px, -50px, 0) scale(0.9);
+  }
+  100% {
+    transform: translate3d(30px, -90px, 0) scale(1.15);
+  }
+}
