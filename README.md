@@ -27,18 +27,20 @@ never have to touch JSX to update the site.
 
 ```js
 export const profile = { name, role, email, phone, github, ... }
-export const skills = {
-  // the four runtime layers, client at the top -> infrastructure at the bottom
-  stack: [ { id, name, role, icon, primary?, items: [{ name, core }] } ],
-  // capabilities that hang off the stack rather than sit inside it
-  attached: [ { id, name, role, icon, items: [...] } ],
-}
+// one flat list of groups — add, remove or reorder freely
+export const skills = [
+  { id, name, note, icon, primary?, items: [{ name, daily? }] },
+]
 export const projects = [ { name, tagline, featured, icon, points: [...], stack: [...] } ]
 ```
 
-The Skills section renders as an architecture diagram: `stack` becomes the stacked layer bands
-(the layer with `primary: true` gets the accent treatment), and `attached` becomes the side rail.
-Marking an item `core: true` gives it a filled dot and heavier weight; the legend explains that.
+The Skills section renders as a set of capability cards. `name` is the plain-English group
+title and `note` is the one line under it saying what the group is for. The single group
+marked `primary: true` renders as the wide featured band at the top; everything else falls
+into the grid below, in array order.
+
+Marking an item `daily: true` gives it a filled dot, heavier weight and a tinted plate — the
+section lead tells the reader what that means, so there is no separate legend to keep in sync.
 
 Icons are [lucide-react](https://lucide.dev) names, referenced as strings in the data and mapped
 in the component (`ICONS` object in `Skills.jsx` / `Projects.jsx`). If you add a new icon name to
