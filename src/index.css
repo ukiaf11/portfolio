@@ -184,85 +184,130 @@
   mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
 
-/* ---- candidate: layered ---- */
 /* ============================================================
-   Skills · layered stack diagram
+   Skills · grouped capability cards
    Plain (unlayered) rules — the same pattern .card-glow::before
    uses above — so they win over Tailwind's @layer utilities.
    ============================================================ */
 
-/* Diagram tints, themed alongside the tokens at the top of this file.
-   Real tokens rather than color-mix on --fg, so the bands stay sane
-   even where color-mix is unsupported. */
+/* Real tokens rather than color-mix on --fg, so the plates stay
+   sane even where color-mix is unsupported. */
 :root {
-  --stack-band: rgb(13 17 23 / 0.035);
-  --stack-band-hover: rgb(13 17 23 / 0.07);
-  --stack-edge: rgb(13 17 23 / 0.14);
-  --stack-chip: rgb(255 255 255 / 0.72);
-  --stack-core-plate: rgb(69 96 224 / 0.11);
+  --skill-chip: rgb(255 255 255 / 0.72);
+  --skill-chip-plate: rgb(69 96 224 / 0.11);
 }
 .dark {
-  --stack-band: rgb(255 255 255 / 0.032);
-  --stack-band-hover: rgb(255 255 255 / 0.065);
-  --stack-edge: rgb(255 255 255 / 0.16);
-  --stack-chip: rgb(8 9 13 / 0.55);
-  --stack-core-plate: rgb(124 156 255 / 0.16);
+  --skill-chip: rgb(8 9 13 / 0.55);
+  --skill-chip-plate: rgb(124 156 255 / 0.16);
 }
 
-/* One horizontal band of the runtime stack */
-.stack-layer {
+/* ---- card shell ---- */
+.skill-card {
   position: relative;
-  overflow: hidden;
-  border-radius: 0.85rem;
+  isolation: isolate;
+  border-radius: 1rem;
   border: 1px solid var(--line);
-  background: var(--stack-band);
-  transition: background 0.35s ease, border-color 0.35s ease;
+  background: var(--card);
+  backdrop-filter: blur(14px);
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease,
+    background 0.35s ease;
 }
-.stack-layer:hover { background: var(--stack-band-hover); }
-
-/* The application layer — the one this developer actually lives in */
-.stack-layer--core {
-  border-color: color-mix(in oklab, var(--color-brand-400) 34%, var(--line));
-  background: linear-gradient(
-    112deg,
-    color-mix(in oklab, var(--color-brand-400) 15%, transparent),
-    color-mix(in oklab, var(--color-teal-400) 7%, transparent) 62%,
-    transparent
-  );
-}
-.stack-layer--core:hover {
-  background: linear-gradient(
-    112deg,
-    color-mix(in oklab, var(--color-brand-400) 21%, transparent),
-    color-mix(in oklab, var(--color-teal-400) 10%, transparent) 62%,
-    transparent
-  );
+.skill-card:hover {
+  transform: translateY(-3px);
+  background: var(--card-hover);
+  border-color: color-mix(in oklab, var(--color-brand-400) 30%, var(--line));
 }
 
-/* Left edge rail — the depth marker on each band */
-.stack-layer__edge {
+/* Hairline gradient edge that lights up on hover */
+.skill-card::before {
+  content: "";
   position: absolute;
-  inset-block: 0;
-  left: 0;
-  width: 3px;
-  background: var(--stack-edge);
-  transition: background 0.35s ease;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, var(--grad-c), transparent 42%, transparent 58%, var(--grad-b));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+  z-index: 1;
 }
-.stack-layer--core .stack-layer__edge {
-  background: linear-gradient(180deg, var(--grad-a), var(--grad-b));
+.skill-card:hover::before { opacity: 0.8; }
+
+/* The group worth leading with */
+.skill-card--featured {
+  border-color: color-mix(in oklab, var(--color-brand-400) 32%, var(--line));
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in oklab, var(--color-brand-400) 14%, transparent),
+      color-mix(in oklab, var(--color-teal-400) 7%, transparent) 58%,
+      transparent 88%
+    ),
+    var(--card);
 }
-.stack-layer:hover .stack-layer__edge {
-  background: linear-gradient(180deg, var(--grad-c), var(--grad-b));
+.skill-card--featured:hover {
+  background:
+    linear-gradient(
+      112deg,
+      color-mix(in oklab, var(--color-brand-400) 19%, transparent),
+      color-mix(in oklab, var(--color-teal-400) 10%, transparent) 58%,
+      transparent 88%
+    ),
+    var(--card);
 }
 
-/* Technology node */
-.stack-chip {
+/* ---- icon tile ---- */
+.skill-tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  height: 2.35rem;
+  width: 2.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--color-brand-400) 22%, transparent);
+  background: linear-gradient(
+    140deg,
+    color-mix(in oklab, var(--color-brand-400) 18%, transparent),
+    color-mix(in oklab, var(--color-teal-400) 12%, transparent)
+  );
+  color: var(--color-brand-400);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.skill-tile--featured {
+  height: 2.85rem;
+  width: 2.85rem;
+  border-radius: 0.9rem;
+}
+.group:hover .skill-tile { transform: scale(1.08) rotate(-4deg); }
+
+/* ---- "primary focus" marker ---- */
+.skill-pill {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-brand-400) 28%, transparent);
+  background: color-mix(in oklab, var(--color-brand-400) 15%, transparent);
+  padding: 0.16rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-brand-400);
+}
+
+/* ---- technology chip ---- */
+.skill-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   border-radius: 0.5rem;
   border: 1px solid var(--line);
-  background: var(--stack-chip);
+  background: var(--skill-chip);
   padding: 0.3rem 0.55rem;
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -271,14 +316,14 @@
   transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
 
-/* Core = daily driver. Weight + dot + plate, never colour on its own. */
-.stack-chip--core {
+/* Daily driver. Weight + dot + plate, never colour on its own. */
+.skill-chip--daily {
   color: var(--fg);
   font-weight: 600;
-  background: var(--stack-core-plate);
+  background: var(--skill-chip-plate);
   border-color: color-mix(in oklab, var(--color-brand-400) 44%, transparent);
 }
-.stack-chip__dot {
+.skill-chip__dot {
   flex: none;
   width: 5px;
   height: 5px;
@@ -286,15 +331,22 @@
   background: var(--color-brand-400);
 }
 
+/* The featured band carries a little more weight than the grid cards */
+.skill-card--featured .skill-chip {
+  font-size: 12px;
+  padding: 0.34rem 0.62rem;
+}
+
 /* Hover states last, so specificity resolves in the intended order */
-.stack-layer:hover .stack-chip {
+.skill-card:hover .skill-chip {
   color: var(--fg);
   border-color: color-mix(in oklab, var(--color-brand-400) 26%, var(--line));
 }
-.stack-layer:hover .stack-chip--core {
+.skill-card:hover .skill-chip--daily {
   border-color: color-mix(in oklab, var(--color-brand-400) 62%, transparent);
 }
-.stack-node:hover .stack-chip {
-  color: var(--fg);
-  border-color: color-mix(in oklab, var(--color-teal-400) 32%, var(--line));
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-card:hover { transform: none; }
+  .group:hover .skill-tile { transform: none; }
 }

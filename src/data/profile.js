@@ -26,93 +26,103 @@ export const highlights = [
 ]
 
 /**
- * The stack expressed as the architecture it actually is.
+ * Skills, grouped so each card answers one plain question about what I do.
  *
- *  stack    — the four runtime layers, client at the top, infrastructure at the bottom.
- *  attached — capabilities that hang off the stack rather than sit inside it.
- *  core     — qualitative emphasis only (no invented percentages): the tools every
- *             role and project on the CV runs on. Everything else is genuine
- *             working knowledge, reached for when the problem calls for it.
+ *  name  — plain English, not architecture jargon. This is what the reader scans.
+ *  note  — one short line saying what the group is for.
+ *  daily — the tools I actually work with every day. They get the highlighted
+ *          treatment in the UI; everything else is genuine working knowledge,
+ *          reached for when the problem calls for it.
+ *  primary — exactly one group gets this. It renders as the wide featured band.
  *
- * Same 26 technologies as before, regrouped by the layer they live in
- * (Python moves down to the service layer, where it is actually used).
+ * Same 26 technologies as before, regrouped by what they DO rather than which
+ * architectural tier they sit in.
  */
-export const skills = {
-  stack: [
-    {
-      id: "client",
-      name: "Client",
-      role: "presentation",
-      icon: "MonitorSmartphone",
-      items: [
-        { name: "React", core: true },
-        { name: "JavaScript" },
-        { name: "HTML" },
-        { name: "CSS" },
-      ],
-    },
-    {
-      id: "services",
-      name: "API & Services",
-      role: "application",
-      icon: "Server",
-      primary: true,
-      items: [
-        { name: "Python", core: true },
-        { name: "Django", core: true },
-        { name: "Django REST Framework", core: true },
-        { name: "Microservice Architecture", core: true },
-        { name: "WebSockets" },
-        { name: "Webhooks" },
-      ],
-    },
-    {
-      id: "data",
-      name: "Data",
-      role: "persistence",
-      icon: "Database",
-      items: [
-        { name: "PostgreSQL", core: true },
-        { name: "Redis" },
-        { name: "MySQL" },
-      ],
-    },
-    {
-      id: "infrastructure",
-      name: "Infrastructure",
-      role: "platform",
-      icon: "Container",
-      items: [
-        { name: "Docker", core: true },
-        { name: "Git", core: true },
-        { name: "Google Secret Manager" },
-      ],
-    },
-  ],
-  attached: [
-    {
-      id: "integrations",
-      name: "Integrations",
-      role: "third-party",
-      icon: "Plug",
-      items: ["Razorpay", "ExchangeRate-API", "Postman"],
-    },
-    {
-      id: "ai",
-      name: "AI Layer",
-      role: "model APIs",
-      icon: "Sparkles",
-      items: ["Gemini API", "Claude API", "Google AI Studio"],
-    },
-    {
-      id: "workbench",
-      name: "Workbench",
-      role: "environments",
-      icon: "TerminalSquare",
-      items: ["VS Code", "Cursor", "Antigravity", "Antigravity 2.0"],
-    },
-  ],
-}
+export const skills = [
+  {
+    id: "backend",
+    name: "Backend & APIs",
+    note: "Secure REST APIs and the multi-tenant services behind them.",
+    icon: "Server",
+    primary: true,
+    items: [
+      { name: "Python", daily: true },
+      { name: "Django", daily: true },
+      { name: "Django REST Framework", daily: true },
+      { name: "Microservice Architecture", daily: true },
+      { name: "WebSockets" },
+      { name: "Webhooks" },
+    ],
+  },
+  {
+    id: "frontend",
+    name: "Frontend",
+    note: "The interfaces people actually touch.",
+    icon: "MonitorSmartphone",
+    items: [
+      { name: "React", daily: true },
+      { name: "JavaScript" },
+      { name: "HTML" },
+      { name: "CSS" },
+    ],
+  },
+  {
+    id: "databases",
+    name: "Databases",
+    note: "Where the data lives, and how it stays fast.",
+    icon: "Database",
+    items: [
+      { name: "PostgreSQL", daily: true },
+      { name: "Redis" },
+      { name: "MySQL" },
+    ],
+  },
+  {
+    id: "infrastructure",
+    name: "Infrastructure",
+    note: "Shipping, versioning and keeping credentials safe.",
+    icon: "Container",
+    items: [
+      { name: "Docker", daily: true },
+      { name: "Git", daily: true },
+      { name: "Google Secret Manager" },
+    ],
+  },
+  {
+    id: "ai",
+    name: "AI Integrations",
+    note: "Model APIs I build product features on top of.",
+    icon: "Sparkles",
+    items: [
+      { name: "Gemini API", daily: true },
+      { name: "Claude API", daily: true },
+      { name: "Google AI Studio" },
+    ],
+  },
+  {
+    id: "integrations",
+    name: "Integrations",
+    note: "Third-party services wired into production apps.",
+    icon: "Plug",
+    items: [
+      { name: "Razorpay", daily: true },
+      { name: "ExchangeRate-API" },
+    ],
+  },
+  {
+    id: "tools",
+    name: "Tools",
+    note: "My day-to-day editors and API workbench.",
+    icon: "TerminalSquare",
+    items: [
+      { name: "VS Code", daily: true },
+      { name: "Cursor" },
+      { name: "Postman" },
+      { name: "Antigravity" },
+      { name: "Antigravity 2.0" },
+    ],
+  },
+]
 
 export const experience = [
   {
