@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Menu, X, Moon, Sun, Download } from 'lucide-react'
-import { navLinks, profile } from '../data/profile'
+import { navLinks, pageSections, profile } from '../data/profile'
 
-export default function Nav() {
+/**
+ * Shared across both entry points.
+ *
+ * `standalone` means this is rendering on a page that is NOT the home page, so the
+ * section entries have to point back at it (`/#about`, not `#about`) and there is no
+ * scroll-spy to run — the active item is the page link for the current page instead.
+ */
+export default function Nav({ standalone = false, current = null }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
-  const [active, setActive] = useState('about')
+  const [active, setActive] = useState(standalone ? current : 'about')
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
   useEffect(() => {
@@ -17,7 +24,8 @@ export default function Nav() {
 
   // Scroll-spy: the section closest to the top band of the viewport wins.
   useEffect(() => {
-    const sections = navLinks
+    if (standalone) return
+    const sections = pageSections
       .map((l) => document.getElementById(l.id))
       .filter(Boolean)
     if (!sections.length) return
@@ -33,13 +41,18 @@ export default function Nav() {
     )
     sections.forEach((s) => io.observe(s))
     return () => io.disconnect()
-  }, [])
+  }, [standalone])
 
   // Lock body scroll while the mobile sheet is open.
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [open])
+
+  // A page entry keeps its own href; a section entry has to reach back to the home
+  // page when we are not on it.
+  const hrefFor = (link) =>
+    link.page ? link.href : standalone ? `/#${link.id}` : `#${link.id}`
 
   const toggleTheme = () => {
     const next = !dark
@@ -51,7 +64,7 @@ export default function Nav() {
   return (
     <>
       <a
-        href="#about"
+        href={standalone ? '#main' : '#about'}
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-brand-500 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
       >
         Skip to content
@@ -68,7 +81,7 @@ export default function Nav() {
           }`}
         >
           <a
-            href="#top"
+            href={standalone ? '/' : '#top'}
             className="group flex items-center gap-2.5 font-mono text-sm font-semibold tracking-tight"
           >
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-400 to-teal-400 text-[13px] font-bold text-ink-900">
@@ -79,11 +92,11 @@ export default function Nav() {
             </span>
           </a>
 
-          <ul className="hidden items-center gap-1 md:flex">
+          <ul className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
               <li key={link.id}>
                 <a
-                  href={`#${link.id}`}
+                  href={hrefFor(link)}
                   aria-current={active === link.id ? 'true' : undefined}
                   className={`relative rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     active === link.id
@@ -122,7 +135,7 @@ export default function Nav() {
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
-              className="grid h-9 w-9 place-items-center rounded-lg border transition-colors hover:bg-[var(--card-hover)] md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-lg border transition-colors hover:bg-[var(--card-hover)] lg:hidden"
             >
               {open ? <X size={17} /> : <Menu size={17} />}
             </button>
@@ -132,7 +145,7 @@ export default function Nav() {
 
       {/* Mobile sheet */}
       <div
-        className={`fixed inset-0 z-40 md:hidden ${open ? '' : 'pointer-events-none'}`}
+        className={`fixed inset-0 z-40 lg:hidden ${open ? '' : 'pointer-events-none'}`}
         aria-hidden={!open}
       >
         <div
@@ -143,7 +156,7 @@ export default function Nav() {
         />
         <div
           className={`absolute inset-x-3 top-20 rounded-2xl p-3 transition-all duration-300 ${
-            open ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
+            open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-3 opacity-0'
           }`}
           style={{ background: 'var(--bg-soft)', border: '1px solid var(--line)' }}
         >
@@ -151,7 +164,7 @@ export default function Nav() {
             {navLinks.map((link) => (
               <li key={link.id}>
                 <a
-                  href={`#${link.id}`}
+                  href={hrefFor(link)}
                   onClick={() => setOpen(false)}
                   className={`block rounded-xl px-4 py-3 text-[15px] transition-colors hover:bg-[var(--card-hover)] ${
                     active === link.id ? 'text-brand-400' : ''

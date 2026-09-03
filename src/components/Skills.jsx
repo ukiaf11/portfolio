@@ -93,7 +93,7 @@ export default function Skills() {
   return (
     <Section
       id="skills"
-      eyebrow="02 — Skills"
+      eyebrow="Skills"
       title="What I build with"
       lead="Grouped by what each thing actually does. The highlighted items are what I work with every day — the rest is solid working knowledge I reach for when a problem calls for it."
     >

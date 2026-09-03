@@ -74,7 +74,7 @@ export default function Projects() {
   return (
     <Section
       id="projects"
-      eyebrow="04 — Projects"
+      eyebrow="Projects"
       title="Things I've architected and shipped"
       lead="Platforms built end to end — from the credit engine that prices every transaction, to embeddable assistants other businesses drop into their own sites."
     >

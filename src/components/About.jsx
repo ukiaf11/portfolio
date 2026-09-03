@@ -28,7 +28,7 @@ const pillars = [
 
 export default function About() {
   return (
-    <Section id="about" eyebrow="01 — About" title="Bridging infrastructure and experience">
+    <Section id="about" eyebrow="About" title="Bridging infrastructure and experience">
       <div className="grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
         <Reveal>
           <p className="text-base leading-relaxed text-muted sm:text-[17px]">{profile.summary}</p>

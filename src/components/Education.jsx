@@ -7,7 +7,7 @@ export default function Education() {
   return (
     <Section
       id="education"
-      eyebrow="05 — Education"
+      eyebrow="Education"
       title="Learning, formal and otherwise"
       lead="A computer applications master's in progress, on top of a full stack development track."
     >
