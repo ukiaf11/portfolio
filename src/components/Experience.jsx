@@ -7,7 +7,7 @@ export default function Experience() {
   return (
     <Section
       id="experience"
-      eyebrow="03 — Experience"
+      eyebrow="Experience"
       title="Where I've been building"
       lead="Shipping secure backend modules and APIs in a production team environment."
     >

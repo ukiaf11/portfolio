@@ -1,6 +1,6 @@
 import { Mail, Phone, MapPin, Github, Download, ArrowUpRight } from 'lucide-react'
 import Reveal from './Reveal'
-import { profile } from '../data/profile'
+import { profile, sectionNo } from '../data/profile'
 
 const channels = [
   { icon: Mail, label: 'Email', value: profile.email, href: `mailto:${profile.email}` },
@@ -21,7 +21,9 @@ export default function Contact() {
           />
 
           <div className="relative">
-            <p className="font-mono text-xs tracking-[0.22em] text-brand-400 uppercase">06 — Contact</p>
+            <p className="font-mono text-xs tracking-[0.22em] text-brand-400 uppercase">
+              {sectionNo('contact') ? `${sectionNo('contact')} — Contact` : 'Contact'}
+            </p>
             <h2 className="mt-3 text-[clamp(1.9rem,5vw,3rem)] font-bold">
               Let's build something <span className="gradient-text">that scales</span>
             </h2>

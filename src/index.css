@@ -127,6 +127,12 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      /* Zeroing the durations alone is not enough: a stagger is expressed as a
+         DELAY, so without these two the content stays in its from-state for the
+         full delay and then snaps. <Reveal delay> sets an inline transition-delay,
+         which an !important declaration here correctly overrides. */
+      animation-delay: 0s !important;
+      transition-delay: 0s !important;
     }
   }
 }
@@ -349,4 +355,506 @@
 @media (prefers-reduced-motion: reduce) {
   .skill-card:hover { transform: none; }
   .group:hover .skill-tile { transform: none; }
+}
+
+/* ============================================================
+   Services · the light table
+   ------------------------------------------------------------
+   One plate divided by 1px seams rather than four floating cards.
+   Skills and Projects already own "grid of bordered cards with a
+   gutter", so this is deliberately a different OBJECT: a single
+   machined panel, subdivided.
+
+   A single light travels UNDERNEATH the cell faces. It washes
+   softly across each face (attenuated by the face's own opacity)
+   and blazes at near-full strength through the seams — which is
+   exactly where there is never any text, so the contrast budget
+   is never spent on the effect.
+
+   Every colour below resolves from tokens that are already
+   swapped per theme, so nothing here reasons about dark mode only.
+   ============================================================ */
+
+/* The light's own tokens. NOT --color-brand-400/--color-teal-400: those are text
+   accents that :root deliberately darkens for light mode, so reusing them painted a
+   dark smudge on a white page instead of a light. These stay high-luminance in both
+   themes, the way --glow-a/b/c already do for the aurora.
+
+   --svc-light is tuned per theme against measured text contrast, not by eye: a
+   light-mode face is 72% opaque and attenuates the light heavily, a dark-mode face is
+   3.5% opaque and attenuates almost nothing, so dark needs far less of it to stay
+   above 4.5:1 on the body copy underneath. */
+:root {
+  --svc-light: 0.55;
+  --svc-glow-a: #dbe5ff;
+  --svc-glow-b: #cdf3ea;
+}
+.dark {
+  --svc-light: 0.2;
+  --svc-glow-a: #7c9cff;
+  --svc-glow-b: #5eead4;
+}
+
+.svc-plate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+/* The light itself. A fixed-size, pre-rasterised blob moved with translate3d,
+   which is a compositor-only change — as opposed to the usual
+   radial-gradient(... at var(--mx) var(--my)), which re-rasterises the whole
+   layer every frame. --mx/--my are written on this childless leaf node, so a
+   pointer move invalidates style for one element instead of the whole section. */
+.svc-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+/* Gated on data-lit, which the pointer handler only sets after a real sample has
+   landed. Without that, :hover can become true with --mx/--my still unset — the page
+   scrolling under a stationary cursor does exactly that — and the blob blooms in the
+   plate's top-left corner. :focus-within deliberately does NOT reveal the light: a
+   keyboard user has no pointer to justify one, and .svc-cell:focus-within already
+   gives them the same brightening every other card on the site uses. */
+.svc-plate[data-lit='1']:hover .svc-glow { opacity: var(--svc-light); }
+
+/* Belt and braces, so the CSS gate can never outlive the JS gate on a touch device. */
+@media (hover: none) {
+  .svc-glow { display: none; }
+}
+
+/* A dark-mode face is only 3.5% opaque, so it barely attenuates the light and the wash
+   lands more or less directly on the body copy. Measured worst case — cursor parked dead
+   centre on a hovered cell's pitch — that is 4.53:1 against --fg-muted: passing, but with
+   no margin at all. Lifting the muted token only while the plate is lit buys the headroom
+   back without dimming the effect, and it is exactly coincident with the light, since the
+   same selector governs both. Light mode needs none of this: it measures 5.77:1 there,
+   because a 72%-opaque face does the attenuating the comment claims. */
+.dark .svc-plate[data-lit='1']:hover .svc-cell { --fg-muted: #a7aec0; }
+
+.svc-glow__blob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 30rem;
+  width: 30rem;
+  margin: -15rem 0 0 -15rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle closest-side,
+    var(--svc-glow-a),
+    color-mix(in oklab, var(--svc-glow-b) 55%, transparent) 55%,
+    transparent 100%
+  );
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* The lattice. Seams are the cells' own 1px borders rather than a full-bleed --line
+   layer showing through a grid gap: that layer sat under every face as well as in the
+   gaps, and in dark mode it lifted the cell background enough to drop the body copy to
+   4.29:1 — failing AA with the light switched off entirely. background-clip keeps each
+   face out from under its own border, so a seam still reads the light at full strength
+   while a face reads it through --card. */
+.svc-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+}
+/* Skills goes two-up at 640px and Projects at 1024px, the difference being how
+   much each card carries. A service cell is dense like a Projects card, so it
+   splits at 768px: at 640 the measure drops to ~40 characters and the pitch
+   turns into a column of soup. */
+@media (min-width: 768px) {
+  .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Two-up: the row seam is above everything past the first row, the column seam is
+     the left edge of every right-hand cell. Generalises to any number of cells. */
+  .svc-cell { border-top: 0; }
+  .svc-cell:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .svc-cell:nth-child(2n) { border-left: 1px solid var(--line); }
+}
+
+.svc-cell {
+  --delay: calc(var(--i, 0) * 110ms);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  background-clip: padding-box;
+  border-top: 1px solid var(--line);
+  padding: 1.25rem;
+  transition: background 0.4s ease;
+}
+.svc-cell:first-child { border-top: 0; }
+@media (min-width: 640px) { .svc-cell { padding: 1.5rem; } }
+
+/* Feedback by brightness, not displacement. A lift would break the lattice —
+   a cell cannot rise without tearing the seams either side of it. This also
+   needs no reduced-motion guard and works identically for keyboard users. */
+.svc-cell:hover,
+.svc-cell:focus-within { background: var(--card-hover); }
+
+/* ---- masthead rule: icon · flag ─────────────── the rule runs THROUGH the type ---- */
+.svc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.svc-head__line {
+  flex: 1;
+  height: 1px;
+  min-width: 0.5rem;
+  /* Accent-tinted rather than plain --line: at 10% opacity the bare token is
+     invisible against the card face in both themes, and tinting it ties the
+     rule to this service's own step on the ramp. */
+  background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 40%, transparent), transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) calc(200ms + var(--delay));
+}
+.reveal.is-visible .svc-head__line { transform: scaleX(1); }
+
+/* Icon tile. Same scale+rotate gesture as .skill-tile, so it reads as family,
+   but tinted with this service's own step on the accent ramp. */
+.svc-tile {
+  display: grid;
+  place-items: center;
+  flex: none;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 26%, transparent);
+  background: linear-gradient(
+    140deg,
+    color-mix(in oklab, var(--accent) 20%, transparent),
+    color-mix(in oklab, var(--accent) 8%, transparent)
+  );
+  color: var(--accent);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.svc-cell:hover .svc-tile { transform: scale(1.08) rotate(-4deg); }
+
+/* "Most requested" marker. Emphasis by label, not by size, so the lattice
+   stays even — copying Skills' wide featured band here would reintroduce
+   exactly the monotony this section is shaped to avoid. */
+.svc-flag {
+  display: inline-block;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  background: color-mix(in oklab, var(--accent) 14%, transparent);
+  padding: 0.16rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ---- deliverables ledger ----
+   Projects already owns the dot-bulleted list. A ruled ledger reads as a
+   document rather than a third feature list, and closes correctly at any width. */
+.svc-ledger {
+  /* margin-top:auto is load-bearing — it bottom-aligns the ledger, chips, proof and
+     link across the two cells of a lattice row, absorbing up to ~70px of difference.
+     But an auto margin only absorbs POSITIVE free space, so on the tallest cell in a
+     row it resolves to 0 and any margin utility here is silently dead. The gap has to
+     come from padding, which is inside the box and survives that collapse. */
+  margin-top: auto;
+  padding-top: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.svc-ledger li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  border-top: 1px solid var(--line);
+  padding: 0.45rem 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+  opacity: 0;
+  transform: translateY(5px);
+  transition:
+    opacity 0.5s ease calc(320ms + var(--delay) + var(--j, 0) * 55ms),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) calc(320ms + var(--delay) + var(--j, 0) * 55ms),
+    color 0.3s ease;
+}
+.reveal.is-visible .svc-ledger li { opacity: 1; transform: none; }
+.svc-cell:hover .svc-ledger li { color: var(--fg); }
+
+.svc-ledger li::before {
+  content: "";
+  flex: none;
+  width: 0.7rem;
+  height: 1px;
+  transform: translateY(-0.3em);
+  background: color-mix(in oklab, var(--accent) 55%, transparent);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s ease;
+}
+.svc-cell:hover .svc-ledger li::before {
+  width: 1.1rem;
+  background: var(--accent);
+}
+
+/* ---- technology chip ----
+   Borderless and tinted, reusing the idiom Experience.jsx already established,
+   rather than adding a third grid of bordered pills to the page. */
+.svc-chip {
+  display: inline-block;
+  border-radius: 0.375rem;
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--fg-muted);
+  transition: color 0.3s ease, background 0.3s ease;
+}
+.svc-cell:hover .svc-chip {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+/* ---- proof link into #projects ---- */
+.svc-proof {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  color: var(--fg-muted);
+  transition: color 0.3s ease;
+}
+.svc-cell:hover .svc-proof { color: var(--accent); }
+.svc-proof svg { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.svc-proof:hover svg { transform: translate(2px, -2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .svc-glow { display: none; }
+  .svc-cell:hover .svc-tile { transform: none; }
+  .svc-cell:hover .svc-ledger li::before { width: 0.7rem; }
+}
+
+/* ============================================================
+   Website types · the blueprint table
+   ------------------------------------------------------------
+   Six miniature wireframes, one per kind of site. Sketches, not
+   screenshots — there are no real client sites to photograph and
+   stock imagery would be a claim about work that does not exist.
+   The section lead says so out loud.
+
+   Three deliberate departures from the light table below it:
+
+   1. MATERIAL. Each preview is an OPAQUE sheet, where the light
+      table is translucent blurred glass. That reads instantly as a
+      different object, and it collapses every contrast calculation
+      inside a preview to one known backdrop per theme instead of a
+      stack of alphas — which is the exact bug class that bit
+      --svc-light twice.
+   2. The caption sits OUTSIDE the frame, on bare ground. A <figure>
+      with an unboxed <figcaption> is a specimen and its label, not
+      another bordered card in a grid of bordered cards.
+   3. The wireframe is GREY, and only the things you would actually
+      click or care about carry the accent — buttons, prices, the
+      active nav item, chart data. That single rule is what keeps an
+      abstract sketch from reading as a grey loading skeleton, which
+      is otherwise exactly what it becomes in dark mode.
+   ============================================================ */
+
+:root {
+  --wf-paper: var(--bg-soft);
+  /* Mixed against the OPAQUE paper rather than layered as alphas, so every
+     value here is a computable colour and "readable in both themes" is a
+     number rather than a hope. .dark overrides only the percentages — the
+     hue, the source token and the direction stay in one place. */
+  --wf-ink-1: color-mix(in oklab, var(--fg) 11%, var(--wf-paper));
+  --wf-ink-2: color-mix(in oklab, var(--fg) 20%, var(--wf-paper));
+  --wf-ink-3: color-mix(in oklab, var(--fg) 34%, var(--wf-paper));
+  --wf-edge: color-mix(in oklab, var(--fg) 14%, var(--wf-paper));
+}
+.dark {
+  --wf-ink-1: color-mix(in oklab, var(--fg) 10%, var(--wf-paper));
+  --wf-ink-2: color-mix(in oklab, var(--fg) 19%, var(--wf-paper));
+  --wf-ink-3: color-mix(in oklab, var(--fg) 32%, var(--wf-paper));
+  --wf-edge: color-mix(in oklab, var(--fg) 13%, var(--wf-paper));
+}
+
+.wf-figure { margin: 0; }
+
+/* The sheet. aspect-ratio + container-type means the drawing scales as a unit
+   instead of reflowing, so there are no internal breakpoints; the px floor in
+   each max() is what makes 360px excellent rather than merely survivable. */
+.wf-stage {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  background: var(--wf-paper);
+  transition: border-color 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.wf-figure:hover .wf-stage,
+.wf-figure:focus-within .wf-stage {
+  border-color: color-mix(in oklab, var(--accent) 38%, var(--line));
+  transform: translateY(-3px);
+}
+
+.wf-sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: max(3px, 1.5cqw);
+  padding: max(6px, 3cqw);
+}
+
+/* ---- primitives ---- */
+.wf-row { display: flex; align-items: center; gap: max(3px, 1.6cqw); }
+.wf-col { display: flex; flex-direction: column; gap: max(3px, 1.5cqw); }
+.wf-grow { flex: 1; min-width: 0; }
+
+.wf-bar {
+  height: max(2px, 1.15cqw);
+  border-radius: 999px;
+  background: var(--wf-ink-2);
+}
+.wf-bar--faint { background: var(--wf-ink-1); }
+.wf-bar--strong { background: var(--wf-ink-3); height: max(3px, 1.9cqw); }
+.wf-bar--accent { background: color-mix(in oklab, var(--accent) 72%, var(--wf-paper)); }
+
+.wf-block {
+  border-radius: max(2px, 1cqw);
+  background: var(--wf-ink-1);
+  border: 1px solid var(--wf-edge);
+}
+
+/* The one element that says "a picture goes here". Used sparingly and only
+   where an image IS the point — a shop tile, a portfolio mosaic — because
+   repeating it on every card makes "the ones with pictures" read as one group
+   and actively reduces how distinguishable the six previews are. */
+.wf-media {
+  position: relative;
+  border-radius: max(2px, 1cqw);
+  background: var(--wf-ink-1);
+  border: 1px solid var(--wf-edge);
+  overflow: hidden;
+}
+.wf-media::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 18%;
+  height: 42%;
+  background: var(--wf-ink-2);
+  clip-path: polygon(0 100%, 30% 34%, 52% 100%, 66% 58%, 100% 100%);
+}
+
+.wf-btn {
+  border-radius: 999px;
+  background: var(--accent);
+  height: max(5px, 3.4cqw);
+}
+.wf-chip {
+  border-radius: 999px;
+  background: var(--wf-ink-2);
+  height: max(4px, 2.4cqw);
+}
+.wf-chip--on { background: color-mix(in oklab, var(--accent) 78%, var(--wf-paper)); }
+
+.wf-dot {
+  flex: none;
+  border-radius: 999px;
+  background: var(--wf-ink-2);
+  height: max(3px, 1.8cqw);
+  width: max(3px, 1.8cqw);
+}
+.wf-dot--on { background: var(--accent); }
+
+.wf-rule { height: 1px; background: var(--wf-edge); }
+
+.wf-panel {
+  border-radius: max(2px, 1.2cqw);
+  border: 1px solid var(--wf-edge);
+  background: color-mix(in oklab, var(--fg) 4%, var(--wf-paper));
+  padding: max(4px, 2.2cqw);
+}
+
+/* Bars of a chart. Only the data carries accent — it is the thing the
+   customer of a portal actually looks at. */
+.wf-chart { display: flex; align-items: flex-end; gap: max(2px, 1.4cqw); }
+.wf-chart > i {
+  flex: 1;
+  border-radius: max(1px, 0.5cqw) max(1px, 0.5cqw) 0 0;
+  background: color-mix(in oklab, var(--accent) 55%, var(--wf-paper));
+}
+.wf-chart > i:last-child { background: var(--accent); }
+
+/* ---- the assembly ----
+   from-only keyframes: the implicit `to` is the element's own computed style,
+   so the ASSEMBLED state is the resting state structurally rather than by
+   convention. A card can never strand half-built, and because the global
+   reduced-motion block zeroes delay as well as duration, a reduced-motion
+   visitor gets everything finished for free with no separate fallback.
+
+   The 420ms floor matters: .reveal runs opacity 0.7s + translateY(22px) on the
+   ancestor, so starting earlier would play the assembly inside a container that
+   is still translucent and still moving. */
+@keyframes wf-rise { from { opacity: 0; transform: translateY(max(3px, 2cqw)); } }
+@keyframes wf-draw { from { opacity: 0; transform: scaleX(0.15); } }
+
+.reveal.is-visible .wf-anim {
+  animation: wf-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(420ms + var(--i, 0) * 55ms);
+}
+.reveal.is-visible .wf-anim--draw {
+  animation-name: wf-draw;
+  /* transform-origin is NOT inherited, so it has to sit on the element the
+     animation is on, not on a child, or every bar scales from its centre. */
+  transform-origin: left center;
+}
+
+/* ---- caption, outside the frame ---- */
+.wf-cap { padding-top: 0.9rem; }
+.wf-cap__name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.wf-cap__icon { color: var(--accent); flex: none; display: inline-flex; }
+.wf-cap__blurb { margin-top: 0.4rem; font-size: 13px; line-height: 1.6; color: var(--fg-muted); }
+.wf-cap__best {
+  margin-top: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+/* Skills owns bordered pills, Services tinted ones, Projects mono bordered ones.
+   A fourth pill treatment would be one too many, so the highlights are a plain
+   mono line with separators — a new idiom, and faster to scan than chips. */
+.wf-cap__marks {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+}
+.wf-cap__marks b { font-weight: 400; color: var(--fg); }
+.wf-cap__marks span { color: color-mix(in oklab, var(--accent) 70%, var(--fg-muted)); padding: 0 0.35rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-figure:hover .wf-stage,
+  .wf-figure:focus-within .wf-stage { transform: none; }
 }
