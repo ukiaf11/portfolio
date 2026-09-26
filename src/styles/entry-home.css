@@ -1,0 +1,21 @@
+/* =============================================================================
+   The home page's section styles: its second stylesheet, after the shared
+   src/index.css (imported in that order by src/main.jsx). See DESIGN.md §2.
+
+   The layer statement repeats index.css's, so the order holds whichever file
+   the browser sees first. @reference ties this file to the Tailwind build that
+   index.css defines without emitting any of it: without a Tailwind feature the
+   Tailwind plugin skips a CSS file, and these sections would lose the color-mix()
+   fallbacks and vendor prefixes its compiler adds.
+   ============================================================================= */
+@layer theme, base, tokens, glass, ui, components, sections, utilities;
+@reference "../index.css";
+
+@import "./sections/hero.css" layer(sections);
+@import "./sections/about.css" layer(sections);
+@import "./sections/work.css" layer(sections);
+@import "./sections/skills.css" layer(sections);
+@import "./sections/experience.css" layer(sections);
+@import "./sections/projects.css" layer(sections);
+@import "./sections/education.css" layer(sections);
+@import "./sections/contact.css" layer(sections);

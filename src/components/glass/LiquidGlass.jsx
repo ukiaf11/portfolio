@@ -193,4 +193,3 @@ const LiquidGlass = forwardRef(function LiquidGlass(
 })
 
 export default LiquidGlass
-export { LiquidGlass as Glass }

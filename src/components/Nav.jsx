@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import {
   Accessibility,
   ArrowUpRight,
@@ -85,16 +86,20 @@ function useLiquidIndicator(active, listRef, linkRefs) {
   const prev = useRef(null)
   const blobRef = useRef(null)
 
+  // The box object is replaced ONLY when the pill has to move, appear or hide: a
+  // re-measure that finds it where it already is keeps the same object, so React bails
+  // out of the render and the squish below does not replay.
   const measure = useCallback(() => {
     const el = active ? linkRefs.current[active] : null
     if (!el || !listRef.current || !el.offsetWidth) {
       prev.current = null
-      setBox((b) => (b ? { ...b, hidden: true } : null))
+      setBox((b) => (b && !b.hidden ? { ...b, hidden: true } : b))
       return
     }
     const x1 = el.offsetLeft
     const x2 = x1 + el.offsetWidth
     const last = prev.current
+    if (last && last.x1 === x1 && last.x2 === x2) return // the target has not moved
     const instant = !last // first appearance: place, don't slide in from 0
     const dir = last ? (x1 > last.x1 ? 'right' : x1 < last.x1 ? 'left' : last.dir) : 'right'
     prev.current = { x1, x2, dir }
@@ -103,21 +108,28 @@ function useLiquidIndicator(active, listRef, linkRefs) {
 
   useLayoutEffect(measure, [measure])
 
+  // The observers below subscribe once and always call the latest measure().
+  const measureRef = useRef(measure)
+  useLayoutEffect(() => {
+    measureRef.current = measure
+  }, [measure])
+
   // Re-measure when the capsule reflows (fonts landing, breakpoint changes).
   useEffect(() => {
     const list = listRef.current
     if (!list) return
     let alive = true
-    const ro = new ResizeObserver(() => measure())
+    const ro = new ResizeObserver(() => measureRef.current())
     ro.observe(list)
-    document.fonts?.ready.then(() => alive && measure()).catch(() => {})
+    document.fonts?.ready.then(() => alive && measureRef.current()).catch(() => {})
     return () => {
       alive = false
       ro.disconnect()
     }
-  }, [listRef, measure])
+  }, [listRef])
 
-  // The squish: the drop flattens a little while it travels.
+  // The squish: the drop flattens a little while it travels. `box` changes identity only
+  // when the pill moves or hides (see measure), so this runs once per move.
   useEffect(() => {
     if (!box || box.instant || box.hidden || reducedMotion()) return
     blobRef.current?.animate(
@@ -155,16 +167,20 @@ export default function Nav({ standalone = false, current = null }) {
     const targets = [document.getElementById('top'), ...pageSections.map((l) => document.getElementById(l.id))]
       .filter(Boolean)
     if (!targets.length) return
-    const pick = () => {
+    const current = () => {
       const line = window.innerHeight * 0.3
       let id = null
       for (const el of targets) if (el.getBoundingClientRect().top <= line) id = el.id
-      setActive(id === 'top' ? null : id)
+      return id === 'top' ? null : id
     }
+    // Committed synchronously from the observer, for the same WebKit reason as Reveal:
+    // after an in-page anchor jump, queued updates stopped committing and the indicator
+    // froze on the section the jump started from.
+    const pick = () => flushSync(() => setActive(current()))
     const io = new IntersectionObserver(pick, { rootMargin: '-25% 0px -65% 0px', threshold: 0 })
     targets.forEach((s) => io.observe(s))
     window.addEventListener('scrollend', pick)
-    pick()
+    setActive(current()) // inside an effect, so a normal update; flushSync is not allowed here
     return () => {
       io.disconnect()
       window.removeEventListener('scrollend', pick)
@@ -209,7 +225,12 @@ export default function Nav({ standalone = false, current = null }) {
   // Arriving with a hash (e.g. /#about from /services/): the target only exists once
   // React has rendered, after the browser's own fragment scroll gave up.
   useEffect(() => {
-    const id = decodeURIComponent(window.location.hash.slice(1))
+    let id = window.location.hash.slice(1)
+    try {
+      id = decodeURIComponent(id)
+    } catch {
+      /* malformed escape: keep the raw fragment */
+    }
     const el = id && document.getElementById(id)
     if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'instant', block: 'start' }))
   }, [])
@@ -254,14 +275,20 @@ export default function Nav({ standalone = false, current = null }) {
 
       <header ref={headerRef} className="site-header">
         <div className="site-header__inner">
-          {/* Desktop brand: faux capsule (no backdrop-filter), chrome alpha. */}
-          <a href={homeHref} className="brand glass glass-capsule glass-interactive" aria-label={`${profile.name}, home`}>
+          {/* Desktop brand: faux capsule (no backdrop-filter), chrome alpha.
+              The accessible name is text content, not an aria-label, so it contains the
+              visible name (WCAG 2.5.3, and no label/content mismatch). It is ONE hidden
+              text run: Chrome inserts a space between separately boxed spans, so the
+              name plus a separate ", home" span came out as "Upendra Kumar , home". The
+              same applies to the phone brand in the capsule below. */}
+          <a href={homeHref} className="brand glass glass-capsule glass-interactive">
             <span className="brand__mark" aria-hidden="true">
               {initials}
             </span>
             <span className="brand__name" aria-hidden="true">
               {profile.name}
             </span>
+            <span className="sr-only">{`${profile.name}, home`}</span>
           </a>
 
           <LiquidGlass
@@ -273,13 +300,14 @@ export default function Nav({ standalone = false, current = null }) {
             className="nav-capsule glass-capsule"
           >
             {/* Phone and tablet: the brand lives inside the capsule. */}
-            <a href={homeHref} className="nav-capsule__brand" aria-label={`${profile.name}, home`}>
+            <a href={homeHref} className="nav-capsule__brand">
               <span className="brand__mark" aria-hidden="true">
                 {initials}
               </span>
               <span className="nav-capsule__name" aria-hidden="true">
                 {profile.name}
               </span>
+              <span className="sr-only">{`${profile.name}, home`}</span>
             </a>
 
             <nav aria-label="Primary" className="nav-desktop">

@@ -2,7 +2,7 @@ import { Award, BadgeCheck, GraduationCap } from 'lucide-react'
 import Section from './Section'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
-import { education, certifications } from '../data/profile'
+import { education, certifications, educationIntro } from '../data/profile'
 
 /**
  * Education: the academic timeline and the certifications, in ONE frost bento
@@ -34,9 +34,9 @@ export default function Education() {
   return (
     <Section
       id="education"
-      eyebrow="Education"
-      title="Learning, formal and otherwise"
-      lead="A computer applications master's in progress, on top of a full stack development track."
+      eyebrow={educationIntro.eyebrow}
+      title={educationIntro.title}
+      lead={educationIntro.lead}
     >
       <Reveal>
         <LiquidGlass as="div" tier="frost" className="bento education">

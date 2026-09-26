@@ -2,7 +2,7 @@ import { ArrowUpRight, Boxes, Github, MessagesSquare, Repeat, Sprout, Star, Uten
 import Section from './Section'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
-import { projects, profile } from '../data/profile'
+import { projects, profile, projectsIntro } from '../data/profile'
 
 /**
  * Projects: the CV case studies. See DESIGN.md and styles/sections/projects.css.
@@ -127,9 +127,9 @@ export default function Projects() {
   return (
     <Section
       id="projects"
-      eyebrow="Projects"
-      title="Things I've architected and shipped"
-      lead="Platforms built end to end — from the credit engine that prices every transaction, to embeddable assistants other businesses drop into their own sites."
+      eyebrow={projectsIntro.eyebrow}
+      title={projectsIntro.title}
+      lead={projectsIntro.lead}
     >
       <div className="projects">
         <Reveal>
@@ -162,7 +162,7 @@ export default function Projects() {
               <Github size={22} strokeWidth={2.1} />
             </span>
             <span className="projects-more__text">
-              <span className="projects-more__title">More on GitHub</span>
+              <span className="projects-more__title">{projectsIntro.moreLabel}</span>
               <span className="projects-more__host">{hostOf(profile.github)}</span>
             </span>
             <span className="sr-only"> (opens in a new tab)</span>

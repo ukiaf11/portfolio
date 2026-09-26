@@ -21,14 +21,16 @@
   --shot-contact: rgb(0 0 0 / 0.06); /* the tight contact shadow under the window */
   --shot-spec: rgb(255 255 255 / 0.38); /* specular top edge of the window */
   --bezel-spec: rgb(255 255 255 / 0.6); /* specular top edge of the phone bezel */
-  --glow-a: 0.42;
+  --shot-fill: #f7f9fd; /* behind a screenshot until it loads */
+  --hero-glow-a: 0.42;
 }
 .dark .hero-stage {
   --shot-ring: rgb(255 255 255 / 0.16);
   --shot-shadow: rgb(0 0 0 / 0.8);
   --bezel: rgb(58 64 88 / 0.78);
   --bezel-ring: rgb(255 255 255 / 0.14);
-  --glow-a: 0.34;
+  --shot-fill: #0e1322;
+  --hero-glow-a: 0.34;
 }
 
 .hero {
@@ -47,6 +49,14 @@
     flex-direction: column;
     justify-content: center;
     padding: 112px 32px 56px;
+  }
+}
+/* No small viewport units (Chrome < 108, Firefox < 101, Safari < 15.4): the min-height
+   above is dropped, so fall back to vh. As @supports, because the minifier merges a
+   vh-then-svh pair in one rule down to the svh line. */
+@supports not (height: 1svh) {
+  @media (min-width: 1024px) {
+    .hero { min-height: 100vh; }
   }
 }
 .hero__grid {
@@ -241,7 +251,7 @@
   width: 92%;
   aspect-ratio: 1.3;
   background: radial-gradient(closest-side, color-mix(in oklab, var(--site, var(--sys-orange)) 60%, transparent), transparent);
-  opacity: var(--glow-a);
+  opacity: var(--hero-glow-a);
   pointer-events: none;
 }
 @media (forced-colors: active) {
@@ -301,7 +311,7 @@
   width: 100%;
   height: auto;
   border-radius: inherit;
-  background: var(--bg-soft);
+  background: var(--shot-fill);
 }
 .hero-stage__window img {
   aspect-ratio: 16 / 10;
@@ -393,7 +403,6 @@
   letter-spacing: -0.01em;
   color: var(--fg-muted);
 }
-.widget__live { margin-left: auto; min-height: 26px; font-size: 12px; font-weight: 600; color: var(--fg); }
 .widget__title {
   margin-top: 14px;
   font-size: 21px;

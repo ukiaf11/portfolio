@@ -164,13 +164,6 @@
     inset 0 0 0 1px var(--skills-daily-ring);
 }
 .skills-key__swatch .skills-chip__dot { width: 6px; height: 6px; box-shadow: none; }
-.skills-key__count {
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-}
-@media (max-width: 479px) {
-  .skills-key__count { margin-left: 0; flex-basis: 100%; }
-}
 
 /* ---- The other six groups: one bento panel ---------------------------------- */
 @media (min-width: 640px) {
@@ -205,6 +198,17 @@
   font-size: 14px;
   line-height: 1.5;
   color: var(--fg-muted);
+}
+
+/* ---- Daily count --------------------------------------------------------------
+   One line under the bento, for the whole section. It sits on the wallpaper, so it
+   stays at the --fg-muted floor. */
+.skills-count {
+  margin: 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- Modes ------------------------------------------------------------------- */

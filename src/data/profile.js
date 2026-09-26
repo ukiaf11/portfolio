@@ -1,3 +1,10 @@
+/**
+ * All visitor-facing copy on both pages lives in this file; the components read it.
+ * Generic control and field labels (Menu, Close, Skip to content, Back to top, Résumé,
+ * Download résumé, Email me, Visit live site, Back to the portfolio, "(opens in a new
+ * tab)", Built with, Highlights, Best for, What you get, Responsibilities, Contact
+ * details) stay in the components. Never invent claims: see README.md.
+ */
 export const profile = {
   name: "Upendra Kumar",
   role: "Full Stack Developer",
@@ -20,10 +27,75 @@ export const profile = {
 
 export const highlights = [
   { value: "5+", label: "Production-grade projects" },
-  { value: "4", label: "Tier multi-tenant hierarchy" },
+  { value: "4", label: "Tiers in the multi-tenant hierarchy" },
   { value: "20+", label: "Technologies in the stack" },
-  { value: "MCA", label: "In progress · IGNOU 2026" },
+  { value: "MCA", label: "Master's in progress · IGNOU 2026" },
 ]
+
+/** Read by Hero.jsx: the status chip, the lead (with its bold phrases) and the live-sites chip. */
+export const heroIntro = {
+  status: "Available for opportunities",
+  lead: "I build scalable microservices, complex multi-tenant SaaS architectures and AI-integrated products: robust Django backends paired with dynamic React frontends.",
+  // Substrings of `lead` that render in bold, in order.
+  leadEmphasis: ["scalable microservices", "multi-tenant SaaS architectures", "AI-integrated products"],
+  // Rendered as `${liveSites.length} ${liveLabel}`, e.g. "5 live sites".
+  liveLabel: "live sites",
+}
+
+/** Read by About.jsx: the section head. The lead is profile.summaryTail. */
+export const aboutIntro = {
+  eyebrow: "About",
+  title: "Bridging infrastructure and experience",
+}
+
+/** Read by About.jsx: the four pillars in the bento. `icon` is a lucide-react name in its ICONS map. */
+export const aboutPillars = [
+  {
+    icon: "Layers",
+    title: "Microservice architecture",
+    body: "Splitting platforms into services that scale and deploy on their own terms, with a credit core holding the transaction lifecycle together.",
+  },
+  {
+    icon: "Braces",
+    title: "Django & DRF backends",
+    body: "Secure APIs, authentication systems and data models built to survive real multi-tenant traffic, not just a demo.",
+  },
+  {
+    icon: "Lock",
+    title: "Security & fintech",
+    body: "Double-entry ledgers, live currency conversion, Razorpay flows and credentials moved off .env into Google Secret Manager.",
+  },
+  {
+    icon: "Cpu",
+    title: "AI integration",
+    body: "Gemini (through Google AI Studio) and Claude APIs wired into products: assistants and automation that ship, not prototypes.",
+  },
+]
+
+/** Read by About.jsx: the Focus grouped list beside the summary. `icon` is a lucide-react name. */
+export const aboutFocus = {
+  title: "Focus",
+  rows: [
+    { icon: "Server", label: "Backend", value: "Django · DRF · PostgreSQL" },
+    { icon: "MonitorSmartphone", label: "Frontend", value: "React" },
+    { icon: "Boxes", label: "Scale", value: "Microservices · multi-tenant" },
+    { icon: "Sparkles", label: "Edge", value: "AI integration · fintech" },
+  ],
+}
+
+/**
+ * Read by Skills.jsx: the section head, the primary band's kicker and the legend.
+ * `dailyCount` has {daily} and {total} placeholders, which Skills.jsx fills in.
+ */
+export const skillsIntro = {
+  eyebrow: "Skills",
+  title: "What I build with",
+  lead: "Grouped by what each thing actually does. The highlighted items are what I work with every day — the rest is solid working knowledge I reach for when a problem calls for it.",
+  primaryKicker: "Primary focus",
+  dailyLabel: "Used every day",
+  otherLabel: "Working knowledge",
+  dailyCount: "{daily} of the {total} technologies here are used every day.",
+}
 
 /**
  * Skills, grouped so each card answers one plain question about what I do.
@@ -114,7 +186,7 @@ export const skills = [
   {
     id: "tools",
     name: "Tools",
-    note: "My day-to-day editors and API workbench.",
+    note: "Editors and the API workbench I build in.",
     icon: "TerminalSquare",
     items: [
       { name: "VS Code", daily: true },
@@ -125,6 +197,13 @@ export const skills = [
     ],
   },
 ]
+
+/** Read by Experience.jsx: the section head. */
+export const experienceIntro = {
+  eyebrow: "Experience",
+  title: "Where I've been building",
+  lead: "Shipping secure backend modules and APIs in a production team environment.",
+}
 
 export const experience = [
   {
@@ -139,6 +218,14 @@ export const experience = [
     stack: ["Django REST Framework", "Postman", "Docker", "Git"],
   },
 ]
+
+/** Read by Projects.jsx: the section head and the GitHub card's title. */
+export const projectsIntro = {
+  eyebrow: "Projects",
+  title: "Things I've architected and shipped",
+  lead: "Platforms built end to end — from the credit engine that prices every transaction, to embeddable assistants other businesses drop into their own sites.",
+  moreLabel: "More on GitHub",
+}
 
 export const projects = [
   {
@@ -220,9 +307,10 @@ export const projects = [
  * site — AI Content Optimizer's own marketing figures, for instance, are hard-coded copy
  * on that site, not measured results, so they are deliberately not repeated here.
  *
- *  kind     — the matching `websiteTypes` id, so /services/ can link a type to its example.
- *  images   — captured locally with headless Chrome, stored as WebP in /public/work.
+ *  images   — captured locally with headless Chrome, stored as WebP in /public/work
+ *             (naming rule: DESIGN.md §11).
  *  note     — an honest caveat the visitor should know before clicking (login wall, demo data).
+ *  noteShort — the short form of note, shown in the /services/ live-sites list.
  *  accent   — the site's own brand colour, sampled from its UI; used for a subtle tint only.
  *  context  — who it was built for or at, when it is not a personal build.
  */
@@ -231,7 +319,6 @@ export const liveSites = [
     id: "mobile-accessories",
     name: "Mobile Accessories Shop",
     url: "https://mobile-accessories-shop-fawn.vercel.app/",
-    kind: "online-shop",
     category: "Online shop",
     tagline: "A phone-accessories storefront that only shows what fits your exact model.",
     summary:
@@ -245,6 +332,8 @@ export const liveSites = [
     ],
     stack: ["React 19", "Vite", "Tailwind CSS v4", "Motion", "Zustand", "React Hook Form", "Zod", "Vercel Functions"],
     accent: "#6d5dfc",
+    note: "Order requests, not checkout: the shop calls back to confirm stock and the final price.",
+    noteShort: "Order requests only",
     images: {
       desktop: "/work/mobile-accessories-1280.webp",
       desktopSmall: "/work/mobile-accessories-640.webp",
@@ -255,7 +344,6 @@ export const liveSites = [
     id: "hotel-express",
     name: "Hotel Express",
     url: "https://hotel-web-mu-ten.vercel.app/",
-    kind: "booking-site",
     category: "Ordering platform",
     tagline: "Meals from neighbourhood hotel kitchens, booked into a delivery or pickup slot up to 14 days ahead.",
     summary:
@@ -270,6 +358,7 @@ export const liveSites = [
     stack: ["React 19", "Vite", "React Router", "Zustand", "Custom CSS design tokens"],
     accent: "#f68d31",
     note: "Live demo — data stays in your browser, with one-click demo accounts for each role.",
+    noteShort: "Demo data",
     images: {
       desktop: "/work/hotel-express-1280.webp",
       desktopSmall: "/work/hotel-express-640.webp",
@@ -280,7 +369,6 @@ export const liveSites = [
     id: "saloon",
     name: "Upendra Salon",
     url: "https://saloon-shop-web.vercel.app/",
-    kind: "booking-site",
     category: "Booking site",
     tagline: "Salon bookings with UPI payment, combo discounts and five lucky free slots every day.",
     summary:
@@ -304,7 +392,6 @@ export const liveSites = [
     id: "omni-panel",
     name: "Omni Panel",
     url: "https://next.bol7.com/billing",
-    kind: "customer-portal",
     category: "SaaS dashboard",
     context: "BOL7 Technologies",
     tagline: "A multichannel AI sales and customer-engagement dashboard for businesses.",
@@ -320,17 +407,18 @@ export const liveSites = [
     stack: ["React", "Vite", "React Router", "Tailwind CSS", "React Flow", "Axios"],
     accent: "#4f46e5",
     note: "Client dashboard — the link opens the sign-in screen.",
+    noteShort: "Sign-in required",
     images: {
-      desktop: "/work/bol7-billing-1280.webp",
-      desktopSmall: "/work/bol7-billing-640.webp",
-      mobile: "/work/bol7-billing-mobile.webp",
+      // 1152 wide: a native-resolution crop, never upscaled (DESIGN.md §11).
+      desktop: "/work/omni-panel-1152.webp",
+      desktopSmall: "/work/omni-panel-640.webp",
+      mobile: "/work/omni-panel-mobile.webp",
     },
   },
   {
     id: "ai-content-optimizer",
     name: "AI Content Optimizer",
     url: "https://ai-content-optimizer-six.vercel.app/",
-    kind: "web-app",
     category: "AI web app",
     tagline: "Scores short-form videos and images, then writes platform-ready captions and fixes.",
     summary:
@@ -344,6 +432,9 @@ export const liveSites = [
     ],
     stack: ["React", "Vite", "Custom CSS", "REST API"],
     accent: "#6366f1",
+    // Comes out once the Render API answers again (see MEMORY.md).
+    note: "The analysis service is offline right now, so uploads won't return a report. The interface is live.",
+    noteShort: "Analysis service offline",
     images: {
       desktop: "/work/ai-content-optimizer-1280.webp",
       desktopSmall: "/work/ai-content-optimizer-640.webp",
@@ -352,18 +443,27 @@ export const liveSites = [
   },
 ]
 
+/** Read by LiveWork.jsx: the Work section head. */
 export const liveSitesIntro = {
-  eyebrow: "Live work",
+  eyebrow: "Work",
   title: "Shipped, deployed and one click away",
   lead:
-    "Real sites running in production — a storefront, an ordering platform, a booking site, a SaaS dashboard and an AI tool. Open any of them and use it the way a customer would.",
+    "Real, deployed sites — a storefront, an ordering platform, a booking site, a SaaS dashboard and an AI tool. Open any of them and click through it yourself.",
+}
+
+/** Read by Services.jsx: the section head (the accent part of the title is set apart). */
+export const servicesIntro = {
+  eyebrow: "Services",
+  titleLead: "What I can",
+  titleAccent: "build for you",
+  lead: "Four kinds of work I take on — websites, custom applications, APIs and AI features. Each one is grounded in something I have already built, not a service line invented for this page.",
 }
 
 /**
  * Client-facing services. Ordered as the reader should meet them, not by strength:
  * websites is the offer the widest set of buyers self-identify with, so it leads.
- * The one marked `featured` gets a "Most requested" marker in its masthead rule —
- * emphasis by label, not by size, so the 2x2 lattice stays even.
+ * A service may carry a short `flag` (e.g. "Core strength"), rendered as a chip in its row:
+ * emphasis by label, not by size.
  *
  *  pitch        — addresses the client in second person and leads with the outcome.
  *  deliverables — concrete, 2-5 words, rendered as a ledger rather than bullets.
@@ -462,7 +562,7 @@ export const services = [
  * WebsiteTypes.jsx, or it silently falls back to the default.
  *
  * `examples` lists `liveSites` ids that ARE this kind of site, so a sketch can link to a
- * real, deployed one. Only list a site whose `kind` genuinely matches.
+ * real, deployed one. Only list a site that genuinely is this kind of site.
  */
 export const websiteTypes = [
   {
@@ -530,17 +630,23 @@ export const websiteTypes = [
   },
 ]
 
+/** Read by WebsiteTypes.jsx: the section head. */
 export const websiteTypesIntro = {
+  eyebrow: "Website types",
   title: "The shapes a website comes in",
   lead:
     "An enquiry usually starts with a rough idea of the kind of site, not a spec. These are the six shapes that idea normally turns out to be, each one drawn as the layout that kind of page actually has — sketches rather than screenshots, since the finished design is decided with you.",
 }
 
-/** Copy for the standalone /services/ page header. */
+/** Read by ServicesApp.jsx: the standalone /services/ page header and its live-sites widget. */
 export const servicesPage = {
   h1: "Websites, and the software behind them",
   intro:
     "I am a full stack developer based in Noida — Django on the backend, React on the front. Most of what people ask for is some combination of a website, the application behind it, and the payments, third-party services or AI features that connect the two. This page starts with the kinds of site I get asked for most, then goes on to the four kinds of work underneath them.",
+  primaryAction: "What I take on",
+  secondaryAction: "Start a conversation",
+  liveTitle: "Live on the web",
+  liveMore: "Screenshots and details",
 }
 
 export const servicesCta = {
@@ -559,9 +665,16 @@ export const servicesCta = {
   ].join("\n"),
 }
 
+/** Read by Education.jsx: the section head. */
+export const educationIntro = {
+  eyebrow: "Education",
+  title: "Learning, formal and otherwise",
+  lead: "A computer applications master's in progress, on top of a full stack development track.",
+}
+
 export const education = [
   {
-    degree: "Master of Computer Applications (MCA_NEW)",
+    degree: "Master of Computer Applications (MCA)",
     school: "Indira Gandhi National Open University (IGNOU)",
     period: "2026 · Pursuing",
     current: true,
@@ -584,12 +697,18 @@ export const certifications = [
   { name: "ADCA", issuer: "Wizard Tech Computer Academy, Ekma", period: "2023" },
 ]
 
-export const marqueeTech = [
-  "Python", "Django", "Django REST Framework", "React", "PostgreSQL", "MySQL",
-  "Redis", "Docker", "Git", "WebSockets", "Webhooks", "Microservices",
-  "Google Secret Manager", "Razorpay", "Gemini API", "Claude API", "Postman",
-  "JavaScript", "Vite", "Tailwind CSS", "HTML", "CSS", "Google AI Studio",
-]
+/** Read by Contact.jsx: the pitch. The title renders as `${title} ${titleTail}`, the tail set apart. */
+export const contactCta = {
+  eyebrow: "Contact",
+  title: "Let's build something",
+  titleTail: "that scales",
+  body: "Open to full stack roles and freelance work — especially anything involving Django backends, microservices or AI integration. The fastest way to reach me is email.",
+}
+
+/** Read by Footer.jsx: the "Built with" credits. */
+export const footerCredits = {
+  builtWith: ["React", "Vite", "Tailwind CSS"],
+}
 
 /**
  * The nav, in order. Single source of truth for the nav itself, the scroll-spy AND the

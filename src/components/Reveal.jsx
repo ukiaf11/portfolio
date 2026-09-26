@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 
 /**
  * Lifts children into view once, the first time they cross the viewport.
@@ -43,7 +44,12 @@ export default function Reveal({
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true)
+          // Committed synchronously rather than queued. In WebKit, after an in-page anchor
+          // link is followed, React's queued (default-priority) updates stopped committing
+          // while observer callbacks kept firing — every section below the jump stayed
+          // invisible. A sync commit does not depend on that queue, and it is one tiny
+          // render per element, once.
+          flushSync(() => setVisible(true))
           io.disconnect()
         }
       },

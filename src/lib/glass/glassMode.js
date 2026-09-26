@@ -18,14 +18,21 @@ import { PREPAINT_CONFIG as cfg, computeGlassMode } from '../prepaint.js'
 const listeners = new Set()
 let unbind = null
 let state = null // { mode, preference }: replaced, never mutated, so snapshots compare by identity
-let memoryPreference = null // used only when localStorage is blocked
+// undefined: localStorage is the truth; set only when writing to it failed
+let memoryPreference
 const SERVER_STATE = Object.freeze({ mode: 'frost', preference: null })
 
+/**
+ * The in-site preference. A choice that could not be stored (a full quota, Safari's old
+ * private mode, blocked storage) wins over whatever localStorage still holds, even when
+ * getItem itself works, or the switch would snap back to the stored value.
+ */
 function readPreference() {
+  if (memoryPreference !== undefined) return memoryPreference
   try {
     return window.localStorage.getItem(cfg.glassKey)
   } catch {
-    return memoryPreference
+    return null
   }
 }
 
@@ -89,12 +96,13 @@ export function useGlassMode() {
  * user can ask for solid surfaces. The pre-paint script reads it on the next load.
  */
 export function setGlassPreference(value /* 'solid' | 'frost' | null */) {
-  memoryPreference = value || null
   try {
     if (value) window.localStorage.setItem(cfg.glassKey, value)
     else window.localStorage.removeItem(cfg.glassKey)
+    memoryPreference = undefined
   } catch {
-    // Blocked storage: memoryPreference still applies it to this page view.
+    // The write failed: keep the choice in memory. It applies to this page view only.
+    memoryPreference = value || null
   }
   refresh()
 }

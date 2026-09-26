@@ -62,22 +62,49 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` not started
 - [x] Add `liveSites` and `liveSitesIntro` to `src/data/profile.js`, plus a `work` nav entry and
       `examples` on the website types
 - [x] Optimise screenshots to WebP in `public/work/` (1280 w, 640 w and mobile; about 400 KB total)
-- [ ] Update meta and OG descriptions if the positioning changed
+- [x] Update meta and OG: per-page `og:image` (1200×630), Twitter large-image cards, Person JSON-LD,
+      favicons, `robots.txt` and `sitemap.xml`
+- [x] Move every piece of visitor-facing copy out of the components and into `profile.js`
+- [x] Add honest caveats to live sites (order requests only, demo data, sign-in required, analysis
+      service offline); say "live" and "deployed", not "in production"
 
 ## Phase 6 — Quality
 - [x] Lead review of every section at 1440 and 390 in both themes: the design is consistent and
       nothing is broken
-- [~] Final QA workflow: multi-lens review, then adversarial verification, then triage, then
-      fixes, then a regression check
-- [ ] `npm run build` passes
-- [ ] Visual QA screenshots at 360, 390, 768, 1024, 1440 and 1920 px, light and dark
-- [ ] Contrast audit on glass, both themes
-- [ ] Accessibility review: keyboard, focus, landmarks, reduced motion and transparency
-- [ ] Performance review: backdrop-filter budget, image sizes, bundle size, Lighthouse
-- [ ] Cross-browser fallback check (frosted tier without SVG refraction)
-- [ ] Fix every issue the reviews find
+- [x] Final QA workflow: 6 review lenses, adversarial verification (39 of 44 findings confirmed),
+      triage, 4 parallel fixers, and a regression gate (passed)
+- [x] `npm run build` passes, with 0 `tw-backdrop` in the CSS. Each page loads two stylesheets
+- [x] Visual QA at 360, 390, 768, 1024, 1440 and 1920 px, in light and dark: 0 overflow, 0 console
+      errors, 0 broken images
+- [x] Contrast audit on glass in both themes: floor 4.58:1, no failures
+- [x] Accessibility review:
+      - keyboard order, focus ring and skip link
+      - landmarks and heading outline
+      - 44px touch targets
+      - reduced motion and reduced transparency
+      - `prefers-contrast` and forced colours
+      - Lighthouse Accessibility 100
+- [x] Performance review:
+      - Lighthouse mobile 98 / 100 / 100 / 100, CLS 0
+      - frost peak 5 per viewport; 3 refract surfaces on `/`, 2 on `/services/`
+      - Inter self-hosted
+- [x] Cross-browser check:
+      - Firefox: layout, logic and frost mode
+      - WebKit (the Safari engine): frost mode, no refraction, pre-paint scripts
+      - the fallbacks for engines without `lvh` or `:has()`
+- [x] Fix every issue the reviews found, plus the WebKit anchor-jump bug found at lead review, where
+      sections stayed invisible after a nav click (fixed with `flushSync`)
 
 ## Phase 7 — Wrap-up
-- [ ] Update the README design notes
-- [ ] Update MEMORY.md and tick off TODO.md
-- [ ] Commit (only on request)
+- [x] README and DESIGN.md updated for the final state. DESIGN.md §13 was rewritten without
+      session-specific paths, and §9.1 records the WebKit rule
+- [x] MEMORY.md (decisions, progress and open questions) and TODO.md updated
+- [ ] Upendra: answer the open questions in MEMORY.md (the AI Content Optimizer API, Postman, the
+      degree name, project-to-site links)
+- [ ] Commit the QA-pass changes, ideally on a branch, and check the Vercel preview before merging
+      to `main`
+
+## Follow-ups (suggested, not started)
+- [ ] Move the QA checks into the repo (`scripts/qa/`, with Playwright as a dev dependency)
+- [ ] Add a GitHub Actions CI job: build, QA checks and Lighthouse on every push and pull request
+- [ ] Verify on real Safari (macOS and iOS) and a real mid-range Android phone

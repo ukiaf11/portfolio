@@ -60,6 +60,16 @@
   .scroll-edge,
   .sheet { --ctl-h: 52px; }
 }
+/* Touch screens at desktop widths (an iPad in landscape, a Surface): each desktop link
+   is the full inner height of the capsule, so the bar grows until the links reach the
+   44px touch floor: 54 − 2 × 4px capsule padding − 2px border = 44px links. After the
+   blocks above, so it wins by source order at every desktop width. The scroll edge
+   declares its own --ctl-h, so it has to follow, or its band stays at 48/52px. */
+@media (min-width: 1024px) and (pointer: coarse) {
+  .site-header,
+  .scroll-edge,
+  .sheet { --ctl-h: 54px; }
+}
 /* Solid glass (the switch, reduced transparency, more contrast) reaches the chrome too. */
 html[data-glass="solid"] .site-header { --nav-chrome-a: var(--glass-a-solid); }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
@@ -504,8 +514,7 @@ html[data-glass="solid"] .site-header { --nav-chrome-a: var(--glass-a-solid); }
   transform: none;
   visibility: visible;
   /* visibility is deliberately NOT in this list: it must flip at once, so focus can move
-     into the sheet in the same frame (reduced motion turns a "0s" transition into a real
-     0.01ms one, which would still read "hidden" at that moment). */
+     into the sheet in the same frame. */
   transition:
     opacity 0.24s ease,
     transform var(--dur-morph) var(--ease-gel);
@@ -517,6 +526,13 @@ html[data-glass="solid"] .site-header { --nav-chrome-a: var(--glass-a-solid); }
   overscroll-behavior: contain;
   padding: 10px;
   border-radius: inherit;
+}
+/* No dynamic viewport units (Chrome < 108, Firefox < 101, Safari < 15.4): without this
+   the max-height above is dropped, and a sheet taller than a landscape phone can
+   neither fit nor scroll. A vh-then-dvh pair in one rule would not do: the minifier
+   merges the pair down to the dvh line. */
+@supports not (height: 1dvh) {
+  .sheet__scroll { max-height: calc(100vh - var(--sheet-top) - 12px); }
 }
 
 /* Grouped list, iOS Settings style: a nested faux plate, concentric with the sheet
@@ -615,14 +631,13 @@ html[data-glass="solid"] .site-header { --nav-chrome-a: var(--glass-a-solid); }
   .sheet__link[aria-current] { text-decoration: underline; text-underline-offset: 4px; }
   .sheet__group { border: 1px solid CanvasText; }
   .nav-menu__plate { border-color: ButtonText; }
+  /* The switch gets a ButtonText pill border here; without a left inset its label and
+     note would start 1px inside that border and be cut by it. */
+  .sheet__pref { padding-left: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-indicator { transition: opacity 0.2s ease; }
   .sheet__panel,
   .sheet.is-open .sheet__panel { transform: none; }
-  /* The global kill switch turns every element's implicit "all 0s" into a real 0.01ms
-     transition, inherited visibility included, and a link that is still "hidden" for
-     that instant refuses focus. Nothing in the sheet animates here anyway. */
-  .sheet__panel * { transition-property: none; }
   .nav-menu:active .nav-menu__plate { transform: none; }
 }

@@ -2,7 +2,8 @@ import { Braces, Briefcase, CalendarDays, Check, Code, Container, GitBranch, Sen
 import Section from './Section'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
-import { experience } from '../data/profile'
+import { experience, experienceIntro } from '../data/profile'
+import { parseDay, formatDay, isoDay } from '../lib/dates'
 
 /** Icon disc per technology in a role's stack (decorative). Unknown names fall back. */
 const STACK_ICONS = {
@@ -12,20 +13,6 @@ const STACK_ICONS = {
   Git: { icon: GitBranch, tile: 'var(--sys-pink)' },
 }
 const STACK_FALLBACK = { icon: Code, tile: 'var(--sys-teal)' }
-
-const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
-
-/** "September 15, 2025" → Date. Parsed by hand: Date() string parsing varies by engine. */
-function parseDay(text) {
-  const m = /^([a-z]+)\s+(\d{1,2}),\s*(\d{4})$/i.exec(text?.trim() ?? '')
-  const month = m ? MONTHS.indexOf(m[1].toLowerCase()) : -1
-  return month < 0 ? null : new Date(Number(m[3]), month, Number(m[2]))
-}
-
-const shortDay = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-
-const isoDay = (d) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 /** Whole months between two dates, spelled out: "8 months", "1 year", "2 years 3 months". */
 function tenure(from, to) {
@@ -83,7 +70,7 @@ function Role({ job, index }) {
         <span className="xp-rail__stop xp-rail__stop--start">
           <span className="xp-rail__label">
             <span className="xp-rail__caption">Started</span>
-            {start ? shortDay(start) : startText}
+            {start ? formatDay(start) : startText}
           </span>
           <span className="xp-rail__dot" />
         </span>
@@ -104,7 +91,7 @@ function Role({ job, index }) {
               {since ? (
                 <>
                   <span>
-                    Since <time dateTime={isoDay(start)}>{shortDay(start)}</time>
+                    Since <time dateTime={isoDay(start)}>{formatDay(start)}</time>
                   </span>
                   <span className="xp-card__len">
                     <span className="xp-card__sep" aria-hidden="true">
@@ -140,7 +127,7 @@ function Role({ job, index }) {
           </div>
 
           <div className="xp-card__aside">
-            <h4 className="xp-card__label">Stack</h4>
+            <h4 className="xp-card__label">Built with</h4>
             <ul className="xp-stack">
               {job.stack.map((tech) => {
                 const { icon: Icon, tile } = STACK_ICONS[tech] ?? STACK_FALLBACK
@@ -166,9 +153,9 @@ export default function Experience() {
     <Section
       id="experience"
       className="xp"
-      eyebrow="Experience"
-      title="Where I've been building"
-      lead="Shipping secure backend modules and APIs in a production team environment."
+      eyebrow={experienceIntro.eyebrow}
+      title={experienceIntro.title}
+      lead={experienceIntro.lead}
     >
       <ol className="xp-timeline">
         {experience.map((job, i) => (

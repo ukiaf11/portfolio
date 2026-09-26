@@ -16,22 +16,38 @@
     <meta property="og:url" content="https://portfolio.upendra.site/services/" />
     <meta property="og:title" content="Services — Upendra Kumar, Full Stack Developer" />
     <meta property="og:description" content="Websites, custom web applications, APIs and AI assistants built end to end with Django and React." />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Services — Upendra Kumar, Full Stack Developer" />
     <meta name="twitter:description" content="Websites, custom web applications, APIs and AI assistants built end to end with Django and React." />
+    <!-- The share card: public/og/services.jpg, 1200x630. -->
+    <meta property="og:image" content="https://portfolio.upendra.site/og/services.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Services — Upendra Kumar, Full Stack Developer" />
+    <meta name="twitter:image" content="https://portfolio.upendra.site/og/services.jpg" />
+    <meta name="twitter:image:alt" content="Services — Upendra Kumar, Full Stack Developer" />
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='0.4' y2='1'><stop offset='0' stop-color='%233d8bff'/><stop offset='.6' stop-color='%230a5fd8'/><stop offset='1' stop-color='%233b3fc9'/></linearGradient></defs><rect width='100' height='100' rx='30' fill='url(%23g)'/><text y='.72em' x='50%25' text-anchor='middle' font-size='54' font-family='Inter,system-ui,sans-serif' font-weight='700' fill='white'>U</text></svg>" />
+    <!-- Structured data (schema.org Person and this WebPage), generated from
+         src/data/profile.js by the portfolio:head plugin in vite.config.js. -->
+    <!-- jsonld -->
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- Theme (class="dark"), glass mode (data-glass) and theme-color, set before first
          paint. Generated from src/lib/prepaint.js by the prepaint plugin in vite.config.js.
          Keep the marker after the theme-color meta and before the stylesheets. -->
     <!-- prepaint -->
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet" />
+    <!-- Inter is self-hosted (src/index.css @font-face); fetch it with the HTML, not after the CSS. -->
+    <link rel="preload" href="/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
+    <!-- What a visitor without JavaScript sees, generated from src/data/profile.js by the
+         portfolio:head plugin in vite.config.js. -->
+    <!-- noscript -->
     <div id="root"></div>
     <script type="module" src="/src/services-main.jsx"></script>
   </body>
