@@ -5,7 +5,7 @@ import {
 import Section from './Section'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
-import { skills } from '../data/profile'
+import { skills, skillsIntro } from '../data/profile'
 
 const ICONS = {
   MonitorSmartphone, Server, Database, Container, Plug, Sparkles, TerminalSquare,
@@ -50,7 +50,7 @@ function ChipList({ items, large = false }) {
         <li key={name} className={daily ? 'chip skills-chip skills-chip--daily' : 'chip skills-chip'}>
           {daily && <span className="skills-chip__dot" aria-hidden="true" />}
           {name}
-          {daily && <span className="sr-only"> — used daily</span>}
+          {daily && <span className="sr-only">{` — ${skillsIntro.dailyLabel.toLowerCase()}`}</span>}
         </li>
       ))}
     </ul>
@@ -65,7 +65,7 @@ function PrimaryBand({ group }) {
       <div className="skills-band__intro">
         <GroupIcon group={group} size="lg" />
         <div className="skills-band__text">
-          <p className="chip chip--accent skills-band__kicker">Primary focus</p>
+          <p className="chip chip--accent skills-band__kicker">{skillsIntro.primaryKicker}</p>
           <h3 id={titleId} className="skills-band__name">
             {group.name}
           </h3>
@@ -79,14 +79,11 @@ function PrimaryBand({ group }) {
             <span className="skills-key__swatch skills-key__swatch--daily" aria-hidden="true">
               <span className="skills-chip__dot" />
             </span>
-            Used every day
+            {skillsIntro.dailyLabel}
           </span>
           <span className="skills-key__item">
             <span className="skills-key__swatch" aria-hidden="true" />
-            Working knowledge
-          </span>
-          <span className="skills-key__count">
-            {dailyCount} of {all.length} used daily
+            {skillsIntro.otherLabel}
           </span>
         </p>
       </div>
@@ -102,9 +99,9 @@ export default function Skills() {
     <Section
       id="skills"
       className="skills"
-      eyebrow="Skills"
-      title="What I build with"
-      lead="Grouped by what each thing actually does. The highlighted items are what I work with every day — the rest is solid working knowledge I reach for when a problem calls for it."
+      eyebrow={skillsIntro.eyebrow}
+      title={skillsIntro.title}
+      lead={skillsIntro.lead}
     >
       <div className="skills-layout">
         {primary && (
@@ -132,6 +129,14 @@ export default function Skills() {
               ))}
             </ul>
           </LiquidGlass>
+        </Reveal>
+
+        {/* The tally covers every group, so it sits under the bento rather than in the
+            primary band's key. Its own Reveal has no glass inside, so it fades whole. */}
+        <Reveal delay={120}>
+          <p className="skills-count">
+            {skillsIntro.dailyCount.replace('{daily}', dailyCount).replace('{total}', all.length)}
+          </p>
         </Reveal>
       </div>
     </Section>

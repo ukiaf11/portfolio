@@ -4,7 +4,7 @@ import Section from './Section'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
 import { accentFor, tileFor } from '../lib/accent'
-import { services, servicesCta, profile } from '../data/profile'
+import { services, servicesCta, servicesIntro, profile } from '../data/profile'
 
 const ICONS = { Gauge, LayoutDashboard, Network, Bot }
 
@@ -243,13 +243,13 @@ export default function Services() {
       id="services"
       className="svc"
       numbered={false}
-      eyebrow="Services"
+      eyebrow={servicesIntro.eyebrow}
       title={
         <>
-          What I can <span className="svc-accent-text">build for you</span>
+          {servicesIntro.titleLead} <span className="svc-accent-text">{servicesIntro.titleAccent}</span>
         </>
       }
-      lead="Four kinds of work I take on — websites, custom applications, APIs and AI features. Each one is grounded in something I have already built, not a service line invented for this page."
+      lead={servicesIntro.lead}
     >
       <div className="svc-stackup">
         <Reveal>

@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { ArrowRight, Briefcase, Github, Mail, MapPin, Phone } from 'lucide-react'
 import LiquidGlass from './glass/LiquidGlass'
 import { useIsDark } from '../lib/theme'
-import { experience, highlights, liveSites, profile } from '../data/profile'
+import { formatDay, isoDay, parseDay } from '../lib/dates'
+import { experience, heroIntro, highlights, liveSites, profile } from '../data/profile'
 
 /**
  * The depth stage's two decorative captures: a desktop window and a phone, both real
@@ -16,6 +17,19 @@ const bySite = (id, i) => liveSites.find((s) => s.id === id) ?? liveSites[i] ?? 
 const STAGE = {
   dark: { window: bySite('hotel-express', 1), phone: bySite('mobile-accessories', 0) },
   light: { window: bySite('mobile-accessories', 0), phone: bySite('hotel-express', 1) },
+}
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * Sets each of `phrases` in bold wherever it appears in `text` (the copy stays one
+ * string in profile.js). Longest first, so a phrase that contains another one wins.
+ */
+function emphasise(text, phrases) {
+  if (!phrases?.length) return text
+  const terms = [...phrases].sort((a, b) => b.length - a.length).map(escapeRe)
+  const re = new RegExp(`(${terms.join('|')})`, 'g')
+  return text.split(re).map((part, i) => (i % 2 ? <strong key={i}>{part}</strong> : part))
 }
 
 /**
@@ -71,6 +85,8 @@ function useStageParallax(ref) {
 
 export default function Hero() {
   const job = experience.find((j) => j.current) ?? experience[0]
+  const startText = job.period.split('—')[0].trim()
+  const started = parseDay(startText)
   const [first, ...rest] = profile.name.split(' ')
   const [leadRole, ...otherRoles] = profile.roles
   const stageRef = useRef(null)
@@ -81,7 +97,7 @@ export default function Hero() {
     <section id="top" className="hero" aria-labelledby="hero-title">
       <div className="hero__grid">
         <div className="hero__copy">
-          <p className="chip chip--live hero__status">Available for opportunities</p>
+          <p className="chip chip--live hero__status">{heroIntro.status}</p>
 
           {/* One text block (inline spans + <br>), not two block spans: it keeps the name
               the page's largest contentful paint, ahead of the stage's screenshots. */}
@@ -100,11 +116,7 @@ export default function Hero() {
             ))}
           </ul>
 
-          <p className="hero__lead">
-            I build <strong>scalable microservices</strong>, complex{' '}
-            <strong>multi-tenant SaaS architectures</strong> and <strong>AI-integrated products</strong>:
-            robust Django backends paired with dynamic React frontends.
-          </p>
+          <p className="hero__lead">{emphasise(heroIntro.lead, heroIntro.leadEmphasis)}</p>
 
           <div className="hero__actions">
             <LiquidGlass
@@ -181,7 +193,7 @@ export default function Hero() {
             className="hero-stage__live glass-capsule"
           >
             <span className="hero-stage__dot" aria-hidden="true" />
-            {liveSites.length} sites live in production
+            {`${liveSites.length} ${heroIntro.liveLabel}`}
             <ArrowRight size={15} strokeWidth={2.4} aria-hidden="true" />
           </LiquidGlass>
 
@@ -225,11 +237,12 @@ export default function Hero() {
                 <p id="hero-now" className="widget__kicker">
                   Now
                 </p>
-                <span className="chip chip--live widget__live">Present</span>
               </div>
               <p className="widget__title">{job.title}</p>
               <p className="widget__sub">{job.company}</p>
-              <p className="widget__meta">Since {job.period.split('—')[0].trim()}</p>
+              <p className="widget__meta">
+                Since {started ? <time dateTime={isoDay(started)}>{formatDay(started)}</time> : startText}
+              </p>
             </LiquidGlass>
 
             <LiquidGlass

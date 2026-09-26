@@ -136,7 +136,7 @@ export default function WebsiteTypes() {
       id="website-types"
       className="wt"
       numbered={false}
-      eyebrow="Website types"
+      eyebrow={websiteTypesIntro.eyebrow}
       title={websiteTypesIntro.title}
       lead={websiteTypesIntro.lead}
     >

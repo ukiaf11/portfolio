@@ -18,9 +18,9 @@
    Modes on <html data-glass>: refract | frost | solid (set before first paint).
 
    Rules that keep this honest
-   - backdrop-filter is written ONLY in this file (and legacy.css until it is
-     deleted), always with LITERAL values: WebKit bugs 297620 / 289800 drop a
-     -webkit-backdrop-filter that is fed from var().
+   - backdrop-filter is written ONLY in this file, always with LITERAL values:
+     WebKit bugs 297620 / 289800 drop a -webkit-backdrop-filter that is fed
+     from var().
    - url() never appears here. Safari and Firefox discard the whole declaration
      (blur included) when it contains url(); refraction is an inline style.
    - A backdrop-filter surface never sits inside another one. There is no
@@ -224,9 +224,9 @@ html[data-glass="refract"] .glass-refract.is-refracting.glass-capsule {
 
 /* ==========================================================================
    Accessibility modes
-   Solid = a token swap (every surface reads the same alpha tokens, legacy
-   ones included) plus no backdrop-filter anywhere. The !important beats the
-   inline url() refraction; it is scoped to solid mode only.
+   Solid = a token swap (every surface reads the same alpha tokens) plus no
+   backdrop-filter anywhere. The !important beats the inline url()
+   refraction; it is scoped to solid mode only.
    ========================================================================== */
 html[data-glass="solid"] {
   --glass-a: var(--glass-a-solid);
@@ -236,7 +236,6 @@ html[data-glass="solid"] {
   --glass-a-refract: var(--glass-a-solid);
   --glass-a-rimzone: var(--glass-a-solid);
   --glass-a-clear: 0.9;
-  --card: rgb(var(--glass-tint) / var(--glass-a-solid));
 }
 html[data-glass="solid"] *,
 html[data-glass="solid"] *::before,
@@ -257,7 +256,6 @@ html[data-glass="solid"] .glass-clear.glass-dim {
     --glass-a-legible: var(--glass-a-solid);
     --glass-a-refract: var(--glass-a-solid);
     --glass-a-rimzone: var(--glass-a-solid);
-    --card: rgb(var(--glass-tint) / var(--glass-a-solid));
   }
   *,
   *::before,
@@ -278,7 +276,6 @@ html[data-glass="solid"] .glass-clear.glass-dim {
     --glass-a-legible: var(--glass-a-solid);
     --glass-a-refract: var(--glass-a-solid);
     --glass-a-rimzone: var(--glass-a-solid);
-    --card: rgb(var(--glass-tint) / var(--glass-a-solid));
     /* Muted and subtle text go to full strength. */
     --fg-muted: var(--fg);
     --fg-subtle: var(--fg);

@@ -45,6 +45,11 @@ function splitHeadline(text) {
  * Proof, not a second Work section: the live sites as a Settings-style grouped list of
  * links (tile, name, category), one frost widget. Screenshots and write-ups stay on the
  * home page, which the footer link points to.
+ *
+ * Each row links straight to the site, so a site's caveat (liveSites[].noteShort: a
+ * sign-in wall, demo data) rides along with its category, and inside the link, so it
+ * is part of the link's accessible name too. The dot is visual only; a screen reader
+ * hears a comma instead.
  */
 function LiveProof() {
   return (
@@ -54,7 +59,7 @@ function LiveProof() {
           <Globe size={15} strokeWidth={2.2} />
         </span>
         <p id="svc-live-title" className="svc-live__title">
-          Live in production
+          {servicesPage.liveTitle}
         </p>
         <span className="chip chip--live svc-live__count">{liveSites.length} sites</span>
       </div>
@@ -70,7 +75,16 @@ function LiveProof() {
                 </span>
                 <span className="svc-live__text">
                   <span className="svc-live__name">{site.name}</span>
-                  <span className="svc-live__cat">{site.category}</span>
+                  <span className="svc-live__cat">
+                    {site.category}
+                    {site.noteShort && (
+                      <>
+                        <span aria-hidden="true"> · </span>
+                        <span className="sr-only">, </span>
+                        <span className="svc-live__note">{site.noteShort}</span>
+                      </>
+                    )}
+                  </span>
                 </span>
                 <span className="sr-only"> (opens in a new tab)</span>
                 <ArrowUpRight className="svc-live__arrow" size={17} strokeWidth={2.3} aria-hidden="true" />
@@ -81,7 +95,7 @@ function LiveProof() {
       </ul>
 
       <a href="/#work" className="svc-live__more">
-        Screenshots and details
+        {servicesPage.liveMore}
         <ArrowRight size={15} strokeWidth={2.3} aria-hidden="true" />
       </a>
     </LiquidGlass>
@@ -132,7 +146,7 @@ export default function ServicesApp() {
                   className="btn btn-lg glass-capsule"
                 >
                   <Sparkles size={17} strokeWidth={2.1} aria-hidden="true" />
-                  What I take on
+                  {servicesPage.primaryAction}
                 </LiquidGlass>
                 <LiquidGlass
                   as="a"
@@ -142,7 +156,7 @@ export default function ServicesApp() {
                   className="btn btn-lg glass-capsule"
                 >
                   <Mail size={17} strokeWidth={2} aria-hidden="true" />
-                  Start a conversation
+                  {servicesPage.secondaryAction}
                 </LiquidGlass>
               </div>
             </div>

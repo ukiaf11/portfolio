@@ -20,8 +20,10 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 
 ## Conventions (keep these)
 
-- **All copy lives in `src/data/profile.js`.** Components read from it. New content such as
-  `liveSites` goes there too.
+- **All visitor-facing copy lives in `src/data/profile.js`.** That covers section titles, leads and
+  pitches, the About pillars, the contact pitch and the footer credits. Components read from it. Generic
+  control labels ("Menu", "Visit live site", "Back to top") stay in the components. New content such as
+  `liveSites` goes into `profile.js` too.
 - **Two real HTML entries, not a router.** `index.html` mounts `App.jsx` and `services/index.html`
   mounts `ServicesApp.jsx`, both configured in `vite.config.js`. Each keeps its own `<title>`,
   meta, canonical and OG tags.
@@ -35,11 +37,19 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 - **CSS layers.** `@layer theme, base, tokens, glass, ui, components, sections, utilities;` is declared at
   the top of `src/index.css`. A later layer beats an earlier one whatever the specificity, so a Tailwind
   utility always wins. `!important` is reserved for the reduced-motion and solid-glass kill switches.
-- **One CSS file per section** in `src/styles/sections/`, owned by that section. `index.css` and the shared
-  styles (`tokens`, `glass`, `ui`, `legacy`) are edited only by the design-system lead.
-- **Glass.** `backdrop-filter` is written only in `glass.css` (and the deprecated `legacy.css`), with
-  literal values. Components use `<LiquidGlass tier>`; CSS owns every radius, and `radius` is a prop only
-  for `tier="refract"`.
+- **CSS per page and per section.**
+  - `src/index.css` is the shared base: tokens, glass, ui, nav and footer.
+  - `src/styles/entry-home.css` and `entry-services.css` import only their own page's section files, so each
+    page loads two stylesheets and never the other page's CSS.
+  - There is one CSS file per section in `src/styles/sections/`.
+  - Tailwind is imported with `source(none)` plus `@source inline("sr-only")`, so `.sr-only` is the only
+    utility it emits.
+  - `legacy.css` has been deleted.
+- **Glass.** `backdrop-filter` is written only in `glass.css`, with literal values. Components use
+  `<LiquidGlass tier>`. CSS owns every radius, and `radius` is a prop only for `tier="refract"`.
+- **Scroll-driven visibility commits with `flushSync`.** `<Reveal>` and the Nav scroll-spy do this. In
+  WebKit, React's queued updates stopped committing after an in-page anchor jump, and sections stayed
+  invisible. See DESIGN.md §9.1 before touching either.
 - **`navLinks` is the single source of truth** for the nav, scroll-spy and the section ordinals
   (`sectionNo`). To reorder sections, change `navLinks` and the JSX order in `App.jsx`.
 - **Icons are lucide-react names stored as strings in the data**, mapped in each component's
@@ -72,6 +82,12 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 | 2026-09-26 | Frost budget: at most 8 backdrop-filter surfaces per viewport, including the header (target: header 2, each section 3). The refract budget of 3 is full. | The judges measured 11 on A. Fewer, larger panels (the bento pattern) are both cheaper and more Apple-like. |
 | 2026-09-26 | Inter only: drop JetBrains Mono, and make `--font-mono` the platform monospace stack | This cuts the Latin webfont payload from 167 KB to 73 KB. The mono look fought the Inter-and-capsule language. The Inter `opsz` axis stays for display type (it costs about 25 KB). |
 | 2026-09-26 | Work cards use the `legible` variant | Over dark screenshots in light theme it removes most of the grey smear. It measured AA in both themes (body copy 7.36:1 or better, chips 5.47:1 or better). |
+| 2026-09-26 | Self-host Inter (`public/fonts/`, OFL licence included) with a preload, and drop the Google Fonts stylesheet | The late font swap caused CLS 0.26 on phones, and the third-party stylesheet blocked rendering. CLS is now 0, and Lighthouse mobile Performance went from 90–95 to 98. |
+| 2026-09-26 | Split the CSS into a shared base plus one entry per page | Both pages used to ship one 118 KB stylesheet. Now the shared base is 9.8 KB gzipped, plus 9.4 KB for home or 5.0 KB for services. |
+| 2026-09-26 | Say "live" and "deployed", never "in production", and put an honest note on any live site that has a caveat: order requests only, demo data, sign-in required, analysis service offline | The QA content review found that "in production" overstated things: one site is labelled a demo and two are pre-launch. Visitors should know before they click. |
+| 2026-09-26 | Commit scroll-driven visibility state with `flushSync` (in `Reveal` and the Nav scroll-spy) | Headless WebKit 26.5 reproduced sections staying invisible after a nav-link click. With the fix, 0 sections in view stay hidden. Chrome and Firefox are unchanged. |
+| 2026-09-26 | Anchor offset: keep `scroll-padding-top` on `html` and cancel the extra `.section` margin | Two offsets were stacking, so nav jumps landed the heading about 42% down the viewport. The eyebrow now lands at about 104 px. |
+| 2026-09-26 | SEO: add `og:image` (1200×630, per page), Person JSON-LD, `robots.txt`, `sitemap.xml`, favicons and a `<noscript>` fallback, generated from `profile.js` by the `portfolio:head` Vite plugin | Lighthouse SEO went from 92 to 100. The pages also get proper link previews when shared. |
 
 ## Useful local tooling
 
@@ -79,8 +95,12 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
   --virtual-time-budget=10000 --screenshot=out.png <url>`. The live sites are client-rendered, so
   use `--dump-dom` rather than curl to read their content.
 - Python 3 with PIL can convert and crop screenshots, including to WebP.
-- The QA scripts (screenshots, glass audit, frost budget, contrast, touch targets, mode tests) are listed in
-  DESIGN.md §13.
+- The QA checks and their pass criteria are in DESIGN.md §13. The scripts themselves were throwaway session
+  tools and are not in the repo. Adding them under `scripts/qa/`, with Playwright as a dev dependency and a
+  CI job, is a recommended follow-up.
+- WebKit, the Safari engine, can run here through Playwright's WPE build, but only with extra system
+  libraries extracted by hand. Headless WebKit and headless Firefox do not paint `backdrop-filter`, so use
+  them for layout, logic and errors only.
 
 ## Progress log
 
@@ -94,20 +114,6 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
   Started a design panel of three prototype directions with three judges.
 - **2026-09-26.** Design panel done, and Tahoe Clear chosen (see the decisions log). Started the
   build workflow: first the foundation port and audit gate, then 8 section agents in parallel.
-- **2026-09-26.** Foundation ported (the audit passed in round 1), and all 8 areas rebuilt:
-  - Nav and Footer
-  - Hero and About
-  - Work
-  - Skills and Experience
-  - Projects and Education
-  - Contact
-  - the Services page
-  - the Website Types gallery
-
-  Measured at integration: the build passes, there is no horizontal overflow at 360–1440 px, and
-  there are 0 console errors. The frost count peaks at 6 per viewport on the home page, down from
-  11. CSS is 118 KB raw (23 KB gzipped) and the main JS is 65 KB gzipped. Starting the final QA
-  workflow next.
 - **2026-09-26.** Foundation landed. Tahoe Clear was ported into the repo, with every foundation-level
   engineering must-fix applied:
   - `@source not inline("backdrop-filter")`, so the built CSS has 0 `tw-backdrop` references
@@ -130,6 +136,34 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 
   Open for the section agents: the frost budget still peaks at 11 at 1440 (DESIGN.md §4.1 names the
   owners).
+- **2026-09-26.** Foundation ported (the audit passed in round 1), and all 8 areas rebuilt:
+  - Nav and Footer
+  - Hero and About
+  - Work
+  - Skills and Experience
+  - Projects and Education
+  - Contact
+  - the Services page
+  - the Website Types gallery
+
+  Measured at integration: the build passes, there is no horizontal overflow at 360–1440 px, and
+  there are 0 console errors. The frost count peaks at 6 per viewport on the home page, down from
+  11. CSS is 118 KB raw (23 KB gzipped) and the main JS is 65 KB gzipped.
+- **2026-09-26.** Final QA pass.
+  - **Review:** six lenses (accessibility, responsive/visual, performance, cross-browser, code/links/SEO and
+    content) reported 44 findings. Adversarial verifiers confirmed 39, and triage dropped 11 as duplicates,
+    already fixed or intentional.
+  - **Fixes:** four fixers with separate file ownership fixed the rest, and the regression gate passed.
+  - **Lead review:** reproduced the WebKit anchor-jump bug the fixers had left open, and fixed it with
+    `flushSync` (DESIGN.md §9.1).
+
+  Final metrics, on the production build:
+  - Lighthouse mobile `/`: 98 / 100 / 100 / 100.
+  - CLS 0.
+  - At 360–1920 px in both themes, on both pages: 0 overflow and 0 console errors.
+  - Contrast floor 4.58:1.
+  - Frost peak: 5 per viewport.
+  - Refract surfaces: 3 on `/`, 2 on `/services/`.
 
 ## Findings about the live sites (for Upendra, not for the portfolio page)
 
@@ -146,3 +180,17 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
   - The profile modal hard-codes "Upendra Kushwaha".
 - **Omni Panel:** the `/billing` route redirects signed-out visitors to `/login`. The real billing
   route is `/bills`.
+
+## Open questions for Upendra
+
+- **AI Content Optimizer:** its analysis API on Render (`ai-content-optimizer-api.onrender.com`) was
+  still not answering on 2026-09-26, so its card says the analysis service is offline. When the API is
+  back, remove `note` and `noteShort` from that entry in `profile.js`.
+- **Postman:** is it really used daily? If so, set `daily: true`. The Skills count updates by itself.
+- **Degree name:** the MCA entry is now shown as "Master of Computer Applications (MCA)" instead of
+  IGNOU's programme code "MCA_NEW". Confirm this is right.
+- **Projects and live sites:** are Omni Panel (next.bol7.com) and Hotel Express the same products as
+  the CV's "Microservice SaaS Platform" and "Multi-Vendor Hotel & Food Ordering Platform"? If so,
+  those project cards could link to the live sites. For now they are deliberately left unlinked.
+- **Deploys:** 1ed348c (the first version of the redesign) was pushed to `main`. If Vercel is
+  connected, that version is already live. The QA fixes are not committed yet.

@@ -1,7 +1,7 @@
 import { ArrowUp, ArrowUpRight, Github, Mail } from 'lucide-react'
 import LiquidGlass from './glass/LiquidGlass'
 import GlassPreference from './glass/GlassPreference'
-import { profile } from '../data/profile'
+import { footerCredits, profile } from '../data/profile'
 
 /**
  * The site footer, shared by both pages (styles/sections/footer.css).
@@ -16,9 +16,10 @@ import { profile } from '../data/profile'
  *
  * "Back to top" targets #main, which exists on both pages (#top is only on the home
  * page's hero).
+ *
+ * The credits come from profile.js (footerCredits); "Built with" and "Back to top" are
+ * control labels and stay here.
  */
-
-const BUILT_WITH = ['React', 'Vite', 'Tailwind CSS']
 
 export default function Footer() {
   const year = new Date().getFullYear()
@@ -54,10 +55,10 @@ export default function Footer() {
           </span>
           <span className="footer-credit__built">
             <span>Built with</span>
-            {BUILT_WITH.map((t, i) => (
+            {footerCredits.builtWith.map((t, i, all) => (
               <span key={t} className="chip footer-chip">
                 {t}
-                {i < BUILT_WITH.length - 1 && <span className="sr-only">,</span>}
+                {i < all.length - 1 && <span className="sr-only">,</span>}
               </span>
             ))}
           </span>

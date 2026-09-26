@@ -207,6 +207,11 @@
   line-height: 1.35;
   color: var(--fg-muted);
 }
+/* A site's caveat wraps as one unit. On a narrow phone (a text column under about
+   230px, so 375px and below) the line then breaks at the separator dot instead of
+   inside "Sign-in required". An inline-block still wraps inside itself when the
+   phrase alone is wider than the column, so this can never overflow. */
+.svc-live__note { display: inline-block; }
 .svc-live__arrow {
   flex: none;
   color: var(--fg-subtle);

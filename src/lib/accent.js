@@ -17,8 +17,8 @@
  *                        taglines, pointer light included: 5.0:1 or better in light and
  *                        5.8:1 or better in dark, at every step.
  *
- * WebsiteTypes.jsx imports accentFor too, so its signature and meaning (a legible ink)
- * stay fixed.
+ * Services.jsx is the only importer. If another list adopts it, keep the signature and
+ * its meaning (a legible ink) unchanged.
  */
 const share = (i, total) => (total > 1 ? Math.round((i / (total - 1)) * 100) : 0)
 

@@ -24,6 +24,12 @@
   isolation: isolate;
   background-color: var(--wp-base);
 }
+/* Engines that know @layer but not lvh (Chrome 99-107, Firefox 97-100) drop the height
+   above and the box collapses to 0. A vh/lvh pair would not help: the CSS optimizer
+   merges it down to lvh. Also covers the wallpaper copy inside .scroll-edge. */
+@supports not (height: 1lvh) {
+  .wallpaper { height: 100vh; }
+}
 .wallpaper > * {
   position: absolute;
   inset: 0;
@@ -65,8 +71,7 @@
      not cut it off from its backdrop.
    An animation (not a transition) carries the fade, so it never clobbers the
    gel `transition: transform` a glass control already has.
-   The class lists below name every backdrop-filter surface. The legacy names
-   (.surface, .skill-card, .svc-plate) go when their sections migrate.         */
+   The class lists below name every backdrop-filter surface.                    */
 .reveal {
   transform: translate3d(0, var(--reveal-lift), 0);
   transition: transform var(--dur-reveal) var(--ease-out);
@@ -75,19 +80,19 @@
 .reveal.is-visible {
   transform: none;
 }
-.reveal:not(:has(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate)) {
+.reveal:not(:has(.glass-frost, .glass-refract, .glass-clear)) {
   opacity: 0;
   transition:
     transform var(--dur-reveal) var(--ease-out) var(--reveal-delay, 0ms),
     opacity var(--dur-reveal) var(--ease-out) var(--reveal-delay, 0ms);
 }
-.reveal.is-visible:not(:has(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate)) {
+.reveal.is-visible:not(:has(.glass-frost, .glass-refract, .glass-clear)) {
   opacity: 1;
 }
-.reveal:not(.is-visible) :is(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate, .reveal-fade) {
+.reveal:not(.is-visible) :is(.glass-frost, .glass-refract, .glass-clear, .reveal-fade) {
   opacity: 0;
 }
-.reveal.is-visible :is(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate, .reveal-fade) {
+.reveal.is-visible :is(.glass-frost, .glass-refract, .glass-clear, .reveal-fade) {
   animation: reveal-fade var(--dur-reveal) var(--ease-out) var(--reveal-delay, 0ms) backwards;
 }
 @keyframes reveal-fade {
@@ -222,13 +227,16 @@
 .tile--sm { --tile-size: 28px; }
 .tile--lg { --tile-size: 48px; }
 
-/* ---- Inset plate: a nested faux surface inside a card ---------------------- */
+/* ---- Inset plate: a nested faux surface inside a card ----------------------
+   --inset-edge is an outer hairline that separates the plate from near-white frost
+   in light theme; it is transparent in dark, where the plate already reads. */
 .inset {
   border-radius: var(--r-inset);
   background: var(--inset);
   box-shadow:
     inset 0 1px 0 var(--glass-rim-soft),
-    inset 0 0 0 1px var(--inset-ring);
+    inset 0 0 0 1px var(--inset-ring),
+    0 0 0 1px var(--inset-edge);
 }
 
 /* ---- Bento: ONE frosted panel subdivided by hairlines, instead of N frosted cards.
@@ -272,10 +280,12 @@ main { overflow-x: clip; }
   max-width: var(--page-max);
   margin-inline: auto;
   padding: 104px 20px 24px;
-  scroll-margin-top: 88px;
+  /* Anchor jumps: html scroll-padding-top already clears the header, so cancel this
+     padding and land on the eyebrow. */
+  scroll-margin-top: -104px;
 }
 @media (min-width: 640px) {
-  .section { padding: 136px 32px 32px; }
+  .section { padding: 136px 32px 32px; scroll-margin-top: -136px; }
 }
 .section__head { max-width: 46rem; }
 .eyebrow {
@@ -283,14 +293,17 @@ main { overflow-x: clip; }
   align-items: center;
   gap: 0.55rem;
   height: 32px;
-  padding: 0 0.85rem 0 0.3rem;
+  padding: 0 0.85rem;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--fg-muted);
 }
-.eyebrow:not(:has(.eyebrow__no)) { padding-left: 0.85rem; }
+/* The ordinal sits 0.3rem from the capsule's edge. A negative margin rather than
+   :has() padding, so engines without :has() (Firefox < 121) keep an unnumbered
+   eyebrow symmetric. */
 .eyebrow__no {
+  margin-left: calc(0.3rem - 0.85rem);
   display: grid;
   place-items: center;
   height: 24px;
@@ -391,7 +404,8 @@ main { overflow-x: clip; }
   height: 22px;
   border-radius: var(--r-pill);
   background: var(--inset);
-  box-shadow: inset 0 0 0 1px var(--line);
+  /* The off state's boundary: >= 3:1 against the panel in both themes (WCAG 1.4.11). */
+  box-shadow: inset 0 0 0 1.5px var(--fg-subtle);
   transition: background 0.25s ease;
 }
 .switch__thumb {
@@ -402,7 +416,7 @@ main { overflow-x: clip; }
   height: 18px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  box-shadow: 0 0 0 0.5px rgb(0 0 0 / 0.28), 0 1px 3px rgb(0 0 0 / 0.3);
   transition: transform var(--dur-gel) var(--ease-gel);
 }
 .switch[aria-checked="true"] .switch__track { background: var(--live); box-shadow: none; }
@@ -421,4 +435,25 @@ main { overflow-x: clip; }
   .switch__track { border: 1px solid ButtonText; }
   .switch__thumb { background: ButtonText; }
   .switch[aria-checked="true"] .switch__track { background: Highlight; }
+}
+
+/* ---- No-JavaScript fallback (<noscript>, filled in by vite.config.js) ---------- */
+.noscript {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 120px 20px;
+}
+.noscript h1 {
+  font-size: var(--text-title-3);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.032em;
+}
+.noscript p { margin-top: 0.5rem; color: var(--fg-muted); }
+.noscript ul { margin-top: 0.75rem; }
+.noscript a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--accent-ink);
 }

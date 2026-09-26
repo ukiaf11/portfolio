@@ -40,17 +40,24 @@ These follow Apple's Human Interface Guidelines for Liquid Glass (iOS 26 / macOS
 ## 2. Architecture
 
 ```
-index.html, services/index.html   two real entries; <!-- prepaint --> marks where the pre-paint script goes
-vite.config.js                    the prepaint plugin injects src/lib/prepaint.js into both entries
-src/index.css                     entry stylesheet: layer order, imports, @theme, base (design-system lead only)
+index.html, services/index.html   two real entries; the <!-- prepaint -->, <!-- jsonld --> and <!-- noscript -->
+                                  markers say where the generated parts go
+vite.config.js                    two plugins: prepaint (src/lib/prepaint.js into both entries) and head
+                                  (schema.org JSON-LD and the <noscript> fallback, both from profile.js)
+public/                           fonts/ (self-hosted Inter + its OFL), og/ (share cards), the favicons,
+                                  robots.txt, sitemap.xml, the résumé PDF, work/ (the screenshots)
+src/index.css                     the SHARED base stylesheet: layer order, Tailwind, @font-face, @theme, base,
+                                  and the imports below except the page entries (design-system lead only)
+src/styles/entry-home.css         the home page's section files              layer: sections
+src/styles/entry-services.css     the /services/ page's section files        layer: sections
 src/styles/tokens.css             tokens, both themes                        layer: tokens
 src/styles/glass.css              the material + accessibility modes         layer: glass
 src/styles/ui.css                 primitives (see section 6)                 layer: ui
 src/styles/nav.css                the site header and mobile sheet           layer: components
-src/styles/legacy.css             DEPRECATED classes for unmigrated code     layer: components
 src/styles/sections/*.css         one file per section                       layer: sections
 src/lib/prepaint.js               theme + glass-mode logic (the ONE copy; also inlined into the HTML)
 src/lib/theme.js                  useIsDark() / setTheme(): the ONE theme source for components
+src/lib/dates.js                  parseDay() / formatDay() / isoDay(): "Sep 15, 2025" is the one display format
 src/lib/glass/glassMode.js        useGlassMode() / useGlassState() / setGlassPreference()
 src/lib/glass/displacementMap.js  the refraction lens map (Snell's law, squircle bezel)
 src/components/glass/LiquidGlass.jsx      every glass surface that needs a tier or refraction
@@ -58,10 +65,19 @@ src/components/glass/GlassPreference.jsx  the "Reduce transparency" switch
 src/components/Section.jsx, Reveal.jsx, Background.jsx   the frame, the scroll reveal, the wallpaper
 ```
 
+**Two stylesheets per page.** Each page links the shared `src/index.css` (cached across both pages) and then its
+own entry file, in that order: `src/main.jsx` imports `./index.css` and then `./styles/entry-home.css`, and
+`src/services-main.jsx` imports `./index.css` and then `./styles/entry-services.css`. A section file goes in the
+entry of the page that renders it; one that both pages render goes in `index.css` (today only `footer.css`).
+Each entry file repeats the layer statement, so the order holds whichever file loads first, and starts with
+`@reference "../index.css"`. Without a Tailwind feature the Tailwind plugin skips a CSS file, and the sections
+would lose the `color-mix()` fallbacks and vendor prefixes its compiler adds. `@reference` keeps them in that
+pipeline without emitting any of `index.css` a second time.
+
 ### 2.1 Cascade layers
 
-The order is declared once at the top of `src/index.css`. Tailwind v4 owns `theme`, `base`, `components` and `utilities`,
-and the design system slots its own layers in between them:
+The order is declared at the top of `src/index.css`, and repeated at the top of each page's entry file. Tailwind v4
+owns `theme`, `base`, `components` and `utilities`, and the design system slots its own layers in between them:
 
 ```css
 @layer theme, base, tokens, glass, ui, components, sections, utilities;
@@ -70,7 +86,8 @@ and the design system slots its own layers in between them:
 **The rule:** a declaration in a later layer beats one in an earlier layer, *whatever the selector
 specificity*.
 
-- A **Tailwind utility** on an element overrides any component or section rule. Use one when you must.
+- A **Tailwind utility** on an element overrides any component or section rule. Use one when you must, and add
+  it to the `inline()` list (below).
 - A **section rule** overrides a primitive. For example, `.work-card .chip` beats `.chip`. You never need
   specificity games or `!important` for this.
 - Inside a single layer, specificity and source order apply as usual.
@@ -79,6 +96,11 @@ specificity*.
   **Do not add `!important` anywhere else.**
 - A Tailwind `@utility` cannot live inside a layered file, so there are no custom utilities in your
   files. Write plain classes.
+- **Tailwind scans no files.** `index.css` imports it with `source(none)`, because scanning turned words in the
+  Markdown docs and code comments into utilities that nothing used. The markup uses exactly one utility,
+  `sr-only`, listed with `@source inline("sr-only")`. **If you start using another utility, add it to that
+  `inline()` list, or it is not generated.** `@source not inline("backdrop-filter")` stays as a guard. The built
+  CSS contains `.sr-only` and no other utility.
 
 ---
 
@@ -139,7 +161,8 @@ Consumed by `glass.css`. You rarely set these directly: pick a tier and variant 
 | `--glass-sheen` | white at 70% | white at 10% | The pooled top sheen, which follows the pointer |
 | `--glass-shadow` | soft blue | deep black | Drop shadow of glass surfaces |
 | `--glass-refract-tone` | `saturate(170%) brightness(1.06)` | `saturate(150%) brightness(.86)` | Read **only** by the Chromium refraction path |
-| `--inset` / `--inset-ring` | white .5 / .75 | white .06 / .10 | Nested faux plates inside a card |
+| `--inset` / `--inset-ring` | white .5 / .75 | white .06 / .10 | Nested faux plates inside a card. They also paint the chips, the Menu plate, the sheet groups and the switch track |
+| `--inset-edge` | ink at 10% | `transparent` | The outer 1px hairline of `.inset`: it separates a nested plate from near-white frost in light theme. Dark needs none |
 
 ### 3.4 Shape, type, motion, layout
 
@@ -155,12 +178,10 @@ Sections 7 and 8 have the full tables. In short:
   - The z-order tokens are `--z-wallpaper: -10`, `--z-sheet: 45`, `--z-header: 50` and `--z-skip: 70`.
     Content lives at z-index 0–2.
 
-### 3.5 Legacy aliases (do not use)
+### 3.5 Legacy aliases (removed)
 
-Unmigrated sections still read `--bg`, `--bg-soft`, `--line`, `--card`, `--card-hover`, `--glow-a`, `--grad-a/b/c`,
-`--color-brand-400` and `--color-teal-400`. The same goes for the Tailwind utilities `text-brand-400`, `bg-brand-400/12`
-and `text-teal-400`. When you migrate a section, stop using them. They are deleted once nothing references
-them.
+The legacy aliases (`--bg`, `--bg-soft`, `--line`, `--card`, `--card-hover`, `--glow-a`, `--grad-a/b/c`, `--color-brand-400`,
+`--color-teal-400`) and `legacy.css` were removed on 2026-09-26.
 
 ### 3.6 Section tokens
 
@@ -176,7 +197,7 @@ A section may define its own tokens, but **scope them to the section's root clas
 | **refract** | Frost everywhere. On Chromium desktop (fine pointer, not low-end), JavaScript adds `backdrop-filter: url(#svg) blur() tone` inline, plus `.is-refracting` | **Only:** the nav link capsule, the theme toggle and the hero "View my work" CTA. On `/services/`: the capsule and the toggle | **FULL.** Add no refract surfaces. Ever. |
 | **frost** | A real backdrop blur in every engine: `blur(22px) saturate(180%) brightness(1.06)` (dark: `saturate(160%) brightness(.82)`), and 16px on phones | Content panels and cards that sit directly on the wallpaper. The mobile sheet | See section 4.1 |
 | **faux** | Tint, specular rim, sheen and shadow, but **no** backdrop-filter | Chips, eyebrows, small controls, list plates, anything **inside** another glass surface, buttons inside panels | Unlimited |
-| **clear** (+ `dim`) | `blur(6px)` with a very low tint; `glass-dim` adds the HIG 35% black layer with white text | **Only over screenshots or media.** It never sits over body copy or the wallpaper | Counts as frost |
+| **clear** (+ `dim`) | `blur(6px)` with a very low tint; `glass-dim` adds the HIG 35% dimming and white text. It has **no `<LiquidGlass>` tier**: write it by hand as `className="glass-clear glass-dim"` | **Only over screenshots or media** (today, only the Work hostname capsule). It never sits over body copy or the wallpaper | Counts as frost |
 
 | Variant | Class | Use for |
 | --- | --- | --- |
@@ -188,22 +209,26 @@ A section may define its own tokens, but **scope them to the section's root clas
 
 ### 4.1 Budgets
 
-These are **measured** with `audit.mjs` (section 13), both mid-reveal and settled.
+These are **measured** with the glass audit (section 13), both mid-reveal and settled.
 
 - **Refract:** at most 3 on `/` and 2 on `/services/`. The budget is full.
 - **Frost:** at most **8** backdrop-filter surfaces visible in any viewport, **including the header's**,
   at 1440 and at 390, in both themes. Clear glass counts.
-  - **The header** should cost **at most 2**, which are its refract controls. Every frosted pill in the header
-    is visible in *every* viewport.
+  - **The header** costs exactly **2**: the nav capsule and the theme toggle, its refract controls. The brand, Résumé
+    and the Menu plate are faux, tinted with the header's `--nav-chrome-a`. Every frosted pill in the header would be
+    visible in *every* viewport, so add none.
+  - **The scroll-edge band** (`.scroll-edge` in `nav.css`) is a second, masked copy of the wallpaper under the header.
+    It has no backdrop-filter, so it costs nothing in the frost budget.
   - **Each section:** at most **3** backdrop-filter surfaces visible at once. That keeps any seam between two
     sections within 8.
   - Anything beyond that is faux, or becomes a cell inside a bento panel (section 5).
 - **Never nest backdrop-filter.** A frost, refract or clear surface never sits inside another one. A nested
   surface only sees its parent's tint, costs a full filter pass and looks flat. There is **no** safety net
-  that hides this. `audit.mjs` reports it as `nested`, and it must be 0.
+  that hides this: the glass audit's DOM walk must find no backdrop-filter element inside another one.
 - **Never create a backdrop root above glass.** See section 9.
 
-Measured on the foundation handoff (1440, dark), worst viewports:
+Measured on the foundation handoff (1440, dark), worst viewports. This is history: every fix in the table has
+landed, and the header now costs 2.
 
 | Where | Count | What is visible | Owner and fix |
 | --- | --- | --- | --- |
@@ -212,6 +237,9 @@ Measured on the foundation handoff (1440, dark), worst viewports:
 | Skills | 11–12 | + 7 × `.skill-card` | **Skills:** one bento, or faux cards |
 | Projects | 9 | + 5 × `.surface` | **Projects:** bento |
 | Education → Contact | 11–13 | + 6 × `.surface` rows, Contact card | **Education:** faux rows in one frost panel |
+
+Measured on 2026-09-26, after the QA fixes (`glassaudit.mjs`, both pages, 1440 and 390, both themes): at most **5**
+backdrop-filter surfaces in any viewport, refract 3 on `/` and 2 on `/services/`, `nested=0`, `rootProblems=0`.
 
 ---
 
@@ -222,7 +250,7 @@ more Apple-like. The primitive is in `ui.css`:
 
 ```jsx
 <LiquidGlass tier="frost" className="bento">
-  <ul className="bento__grid pillars">
+  <ul className="bento__grid about__pillars">
     {items.map((it) => (
       <li key={it.id} className="bento__cell">…</li>
     ))}
@@ -232,8 +260,8 @@ more Apple-like. The primitive is in `ui.css`:
 
 ```css
 /* sections/about.css: the section owns the columns */
-@media (min-width: 640px) { .pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .pillars { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 640px) { .about__pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .about__pillars { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 ```
 
 - Each cell draws only its **top and left** hairline (`--hairline`). The grid clips the lines on the
@@ -278,6 +306,10 @@ You can write faux glass without the component, as plain classes, for example `c
 Do **not** hand-write `glass-frost` or `glass-refract` on an element. Use the component, so the tier stays
 auditable.
 
+Clear glass is the exception: it has **no** `<LiquidGlass>` tier. Write it by hand as `className="glass-clear glass-dim"`,
+where `.glass-dim` adds the HIG 35% dimming and white text. It is allowed only over media (today, only the Work
+hostname capsule over its screenshot), and it counts as frost in the budget.
+
 ### 6.2 Buttons: `.btn`
 
 Buttons are always capsules. Each one pairs with a glass tier, and each has a 1px transparent border that forced colours paint as
@@ -308,7 +340,7 @@ or make it at least 44px tall on touch.
 <span className="chip chip--live">Available for opportunities</span>
 ```
 
-Stack and technology lists use `.chip` in **Inter**. The legacy mono chips (`.skill-chip`, `font-mono`) go away.
+Stack and technology lists use `.chip` in **Inter**. The legacy mono chips (`.skill-chip`, `font-mono`) are gone.
 
 ### 6.4 Icon tiles: `.tile`
 
@@ -322,7 +354,8 @@ The sizes are `.tile--sm` 28px, `.tile` 40px and `.tile--lg` 48px. The radius is
 
 ### 6.5 Inset plate: `.inset`
 
-This is a nested faux plate inside a card (`--r-inset`). Use it for grouped lists, stat tiles and notes.
+This is a nested faux plate inside a card (`--r-inset`). Use it for grouped lists, stat tiles and notes. Its outer
+`--inset-edge` hairline keeps it visible on near-white frost in light theme.
 
 ### 6.6 Eyebrow and section frame: `<Section>`
 
@@ -338,7 +371,11 @@ This is a nested faux plate inside a card (`--r-inset`). Use it for grouped list
   a number. `/services/` sections pass `numbered={false}`.
 - **From 1024px the head has two columns.** The title is on the left (7fr) and the lead on the right (5fr), and they are
   bottom-aligned, so wide viewports never leave the right half empty. With no lead, the head stays one column.
-- The width is `--page-max`, with padding of 104/20px on phones and 136/32px from 640px.
+- The width is `--page-max`, with padding of 104/20px on phones and 136/32px from 640px. A negative
+  `scroll-margin-top` (−104px, then −136px) cancels that top padding for anchor jumps: `html` `scroll-padding-top`
+  already clears the header, so a jump lands on the eyebrow rather than 100px+ below it.
+- The eyebrow capsule has symmetric padding; the ordinal pulls itself back to 0.3rem from the edge with a negative
+  margin. That keeps unnumbered eyebrows symmetric in engines without `:has()`.
 - `title` can be a node. `className` is added to the `<section>`.
 
 ### 6.7 `<Reveal>`
@@ -358,9 +395,12 @@ See section 9 for the rules.
 <GlassPreference className="sheet__pref" /> {/* mobile sheet (Nav agent) */}
 ```
 
-This is the "Reduce transparency" switch, with `role="switch"` and `aria-checked`, and a target of at least 44px. It calls
-`setGlassPreference('solid' | null)`, the choice persists, and other tabs follow it. When the OS already forces solid
-(reduced transparency, increased contrast or forced colours), it shows as on and disabled, with the note "Set by your system".
+This is the "Reduce transparency" switch, with `role="switch"` and `aria-checked`, and a target of at least 44px. Off, its
+track has a 1.5px `--fg-subtle` ring that holds at least 3:1 against the panel in both themes (WCAG 1.4.11; measured
+5.6–6.5:1). It calls `setGlassPreference('solid' | null)`, the choice persists, and other tabs follow it. If storage
+refuses the write (a full quota, blocked storage), the choice still applies to the current page view. When the OS
+already forces solid (reduced transparency, increased contrast or forced colours), it shows as on and disabled, with
+the note "Set by your system".
 
 ### 6.9 Other primitives
 
@@ -372,6 +412,7 @@ This is the "Reduce transparency" switch, with `role="switch"` and `aria-checked
 | `.skip-link` | Already in `Nav`. Do not add another |
 | `.reveal-fade` | Marks a leaf that should fade with its `Reveal` (for example a screenshot under clear glass) |
 | `.switch` and its parts | Styling for `<GlassPreference>` |
+| `.noscript` | The no-JavaScript fallback that `vite.config.js` writes into both entries: name, role and contact links |
 
 ### 6.10 Reading the theme and the glass mode in JavaScript
 
@@ -388,7 +429,9 @@ yourself. The pre-paint script (`src/lib/prepaint.js`) is injected into both HTM
 
 ## 7. Type
 
-The typeface is **Inter**, from Google Fonts, with optical sizing (`opsz 14..32`) and weights 400–800. New work
+The typeface is **Inter**, self-hosted (`public/fonts/inter-var-latin.woff2`, the Google Fonts latin variable file,
+`opsz 14..32`, weights 400–800), preloaded by both entries, with a metric-matched `Inter Fallback` face (a local
+Arial, Liberation Sans or Helvetica, size-adjusted to Inter) so the swap does not move the layout. New work
 uses **400–700**. There is **no webfont monospace**: `--font-mono` is the platform's own stack, for the rare
 code-like string. Everything else is Inter, and that includes labels, dates, chips and ledgers.
 
@@ -441,10 +484,11 @@ Motion rules:
 
 - Animate only `transform` and `opacity`.
 - Hover effects go under `@media (hover: hover)`.
-- **No looping motion.** Nothing may run indefinitely, and an auto-advancing element stops after one pass. The hero's role island goes
-  round the roles once, then stops.
-- Reduced motion zeroes durations **and delays**. This is global, in base. Also turn off any transform-based
-  hover in your own `@media (prefers-reduced-motion: reduce)` block.
+- **No looping motion.** Nothing may run indefinitely, and an auto-advancing element stops after one pass. The hero's
+  roles are a static list, all on screen at once (WCAG 2.2.2).
+- Reduced motion removes transitions outright (a 0s duration **and** a 0s delay, so none starts and a visibility
+  change applies at once) and ends animations after 0.01ms, with no delay. This is global, in base. Also turn off
+  any transform-based hover in your own `@media (prefers-reduced-motion: reduce)` block.
 
 ---
 
@@ -466,7 +510,20 @@ So:
   Use the component tiers.
 - To fade a screenshot under clear glass, put `.reveal-fade` on the image, not on its container.
 - `overflow: hidden` and `clip` are **not** backdrop roots, and they are fine.
-- `audit.mjs` must report **0 `rootProblems`**.
+- The glass audit's DOM walk must find **no backdrop root** above a frost, refract or clear surface.
+
+### 9.1 Scroll-driven state commits synchronously
+
+`<Reveal>` and the Nav scroll-spy set React state from an `IntersectionObserver` callback, and both wrap it in
+`flushSync`. That is load-bearing. In WebKit (the Safari engine), after a visitor follows an in-page anchor link
+such as a nav item, React's queued (default-priority) updates stopped committing while the observers kept firing.
+Every section below the jump stayed invisible, and the nav indicator froze. Headless WebKit 26.5 reproduced it
+3 out of 3 times; with `flushSync`, 0 sections in view stay hidden. Chrome and Firefox were never affected.
+
+- Any new state that is set from an observer or a scroll event, and that controls whether content is **visible**,
+  must commit with `flushSync` (or write to the DOM directly, as the hero parallax does).
+- Do not call `flushSync` inside an effect or during render. For the first measurement inside `useEffect`, use a
+  plain `setState`.
 
 ---
 
@@ -474,9 +531,9 @@ So:
 
 | Rule | How |
 | --- | --- |
-| **AA 4.5:1 for body text, measured** (3:1 for text of 24px or more, or 18.66px bold) | Run `contrast-capture.mjs` and `contrast.py` (section 13) on your section at 1440 and 390, in both themes, including every position where your text passes over a screenshot. Report the worst run of each group. Body copy uses `--fg-muted` or stronger |
+| **AA 4.5:1 for body text, measured** (3:1 for text of 24px or more, or 18.66px bold) | Run `ccap.mjs` and `contrast.py` (section 13) on your section at 1440 and 390, in both themes, including every position where your text passes over a screenshot. Report the worst run of each group. Body copy uses `--fg-muted` or stronger |
 | **44px touch targets** | Every control is at least 44×44 on touch or at ≤ 640px. Use `--target-min`, or `.tap-target` for small non-glass links. Inline links inside running text are exempt. `targets.mjs` lists offenders |
-| **Focus ring** | The two-tone ring (`--focus-ring` outline plus `--focus-halo`) is global. Never remove `outline` without replacing it. Focus must never hide under the header (`scroll-padding-top` handles anchors) |
+| **Focus ring** | The two-tone ring (`--focus-ring` outline plus `--focus-halo`) is global. Never remove `outline` without replacing it. Focus must never hide under the header (html scroll-padding-top: 6.5rem clears the header for anchors and focus; .section cancels its own top padding with a negative scroll-margin-top, so a jump lands on the eyebrow) |
 | **Forced colours** | Every control keeps a visible boundary. Use `.btn`, which gets a `ButtonText` border, and `.glass`, which gets a `CanvasText` border. Custom controls need a transparent 1px border or an explicit system-colour border. Background images and box-shadows disappear, so never carry meaning in them |
 | **Reduced transparency and increased contrast** | These are handled by solid mode (`data-glass="solid"` plus the media queries): every alpha goes to .95, `backdrop-filter` is removed, and under more contrast `--fg-muted` and `--fg-subtle` become `--fg`. **Do not override `--fg-muted` in your section**, because it would defeat this. Anything that sets its own background must read the `--glass-a*` tokens so solid mode reaches it |
 | **Reduced motion** | Global. See section 8.2 |
@@ -489,8 +546,12 @@ So:
 
 ## 11. Image rules
 
-- Images are real screenshots only. They live in `public/work/` as WebP: `<id>-1280.webp`, `<id>-640.webp` and `<id>-mobile.webp`, all
-  referenced from `profile.js` (`liveSites[].images`). There are no remote images and no stock images.
+- Images are real screenshots only. They live in `public/work/` as WebP, all referenced from `profile.js`
+  (`liveSites[].images`), where `<id>` is the site's `liveSites` id. There are no remote images and no stock images.
+  - Desktop files are `<id>-<width>.webp`. The width is 1280, or the capture's native width when it is narrower
+    and must not be upscaled. The one such file today is `omni-panel-1152.webp`, whose width `LiveWork.jsx`
+    declares in `SITE_UI.desktopWidth` (so the `srcset` descriptor is honest).
+  - The other files are `<id>-640.webp` and `<id>-mobile.webp`.
 - Always set `width` and `height` (for zero CLS), `loading="lazy"`, `decoding="async"` and a real `alt` that describes the
   site. The only exception is `alt=""` for a purely decorative duplicate.
 - For desktop shots, use `srcSet="…-640.webp 640w, …-1280.webp 1280w"` with an honest `sizes`, and use the 640 file as the `src` fallback.
@@ -520,7 +581,7 @@ new tokens, new primitives, `profile.js` copy, `navLinks` and the section order.
 | Contact | `src/components/Contact.jsx`, `src/styles/sections/contact.css` |
 | Footer | `src/components/Footer.jsx`, `src/styles/sections/footer.css` |
 | Services page | `src/ServicesApp.jsx` (the page header), `src/components/Services.jsx`, `src/components/WebsiteTypes.jsx`, `src/components/SiteMockup.jsx`, `src/lib/accent.js`, `src/styles/sections/services.css`, `src/styles/sections/website-types.css` |
-| **Shared (design-system lead only)** | `index.html`, `services/index.html`, `vite.config.js`, `src/index.css`, `src/styles/{tokens,glass,ui,legacy}.css`, `src/lib/{prepaint,theme}.js`, `src/lib/glass/*`, `src/components/glass/*`, `src/components/{Section,Reveal,Background}.jsx`, `src/App.jsx`, `src/main.jsx`, `src/services-main.jsx`, `src/data/profile.js`, `public/`, `DESIGN.md`, `PRD.md`, `MEMORY.md`, `TODO.md`, `README.md` |
+| **Shared (design-system lead only)** | `index.html`, `services/index.html`, `vite.config.js`, `src/index.css`, `src/styles/{tokens,glass,ui,entry-home,entry-services}.css`, `src/lib/{prepaint,theme,dates}.js`, `src/lib/glass/*`, `src/components/glass/*`, `src/components/{Section,Reveal,Background}.jsx`, `src/App.jsx`, `src/main.jsx`, `src/services-main.jsx`, `src/data/profile.js`, `public/`, `DESIGN.md`, `PRD.md`, `MEMORY.md`, `TODO.md`, `README.md` |
 
 If you own several sections, you own all of their files. Rules inside your files:
 
@@ -532,47 +593,36 @@ If you own several sections, you own all of their files. Rules inside your files
 - **No `.dark` rule** that changes a text colour. Theme differences belong in tokens.
 - No new dependency, no new font, no inline `<style>`.
 - Copy stays in `profile.js` (it is shared, so request any change). Never invent claims.
-- Remove every `font-mono`, `.surface`, `.card-glow`, `.gradient-text` and `rounded-xl` button from your section.
 
 ### 12.1 What each section inherits from the judges
 
-| Owner | Must-fix and grafts to consider |
-| --- | --- |
-| Nav | Frost budget: make the brand, résumé and menu pills faux with the chrome alpha. Add a scroll-edge effect behind the floating toolbar (prefer a gradient scrim, which costs no blur; a blurred band counts as one frost). Keep the name in the phone brand capsule (C's capsule: avatar, name and "Menu"). Put `<GlassPreference>` in the mobile sheet. Keep light-theme labels legible over dark screenshots |
-| Hero | Make the secondary buttons ("Get in touch", GitHub) faux. Give the hero a showpiece with a live site in view (B's depth stage and a "5 sites live in production" chip linking to `#work`, static or lightly parallaxed). Give the meta links (email and phone, currently 21px tall) 44px targets. Tighten phone spacing so `#work` arrives sooner |
-| About | Put the 4 pillars into one bento panel (at most 2 frost surfaces in total) |
-| Work | At 390 the phone bezel overlaps the address capsule: move one of them. Dark windows need a rim or chrome. Link the screenshot and the title to the live site as well (one tab stop). Add a jump row of the five sites (chip links, 44px targets). Print the hostname next to "Visit live site". Make `src` the 640 file |
-| Skills | 7 frosted cards: turn them into a bento or faux cards. Move the chips to `.chip` (Inter) |
-| Experience, Projects, Education | Replace `.surface` cards with one frost panel or bento each, with faux rows inside. Drop `font-mono` |
-| Contact | Rebuild `.surface` and `.gradient-text` on the system. The buttons are already `.btn` capsules |
-| Footer | "Back to top" points at `#top`, which does not exist on `/services/`. The container is `max-w-6xl`; use `--page-max` |
-| Services page | The page header is `max-w-6xl`; use `--page-max`. `.svc-plate` uses its own `backdrop-filter`: move it to `<LiquidGlass>` and a bento. The "Back to the portfolio" (16px) and "See the build" (18px) targets are too small. Website-type cards should link to their live example (`websiteTypes[].examples`) |
+All §12.1 items were addressed in the 2026-09-26 rebuild.
 
 ---
 
 ## 13. Verification (run before you report)
 
-The QA scripts live outside the repo, because they use a Playwright install in the npx cache. In this workspace:
+The redesign was verified with headless Chrome (Playwright driving the system Chrome), plus Firefox and
+WebKit (the Safari engine) for the fallback paths. **Those scripts are not in the repo yet**: they lived in a
+temporary working folder and depended on a machine-local Playwright install. Adding them under `scripts/qa/`,
+with Playwright as a dev dependency and a CI job, is a recommended follow-up. Until then, run these checks by
+hand or with your own Playwright script. The pass criteria are what matters:
 
-```bash
-QA=/tmp/claude-1000/-home-bol7-Desktop-upendra-Portfolio/a8fbb2a8-482b-4253-9e47-e12d8924d426/scratchpad/qa
-OUT=/tmp/claude-1000/-home-bol7-Desktop-upendra-Portfolio/a8fbb2a8-482b-4253-9e47-e12d8924d426/scratchpad/<your-name>
-URL=http://localhost:5173        # the dev server (Vite, HMR). Do not stop it
-```
-
-| Check | Command | Pass |
+| Check | How | Pass |
 | --- | --- | --- |
-| Build (never into the repo's `dist/`) | `cd /home/bol7/Desktop/upendra/Portfolio && npx vite build --outDir $OUT/build --emptyOutDir` | Builds, and both entries render |
-| No Tailwind backdrop utility | `grep -c tw-backdrop $OUT/build/assets/*.css` | `0` |
-| No backdrop-filter outside the material | `grep -rn -e "backdrop-filter *:" -e "backdropFilter" src/components src/styles/sections` | Only `LiquidGlass.jsx` (today also the legacy `skills.css` and `services.css`, whose agents remove it) |
-| No radius props or inline radii | `grep -rn -e "radius=" -e "borderRadius" src/components --include=*.jsx` | Only the 3 refract surfaces and `LiquidGlass.jsx` (today also one wireframe pill in `SiteMockup.jsx`) |
-| Screens, overflow, console | `node $QA/sections.mjs $URL $OUT "/,/services/" "1440,390,360" "dark,light" "<your ids>"` | `hOverflow=0`, no `ERRORS`, and **look at every shot** |
-| Glass audit | `node $QA/audit.mjs $URL 1440 dark /` and again at `390` (plus `/services/` if yours) | refract ≤ 3, `nested` 0, `rootProblems` 0, `maxVisible` ≤ 8 |
-| Which surfaces are over budget | `node $QA/budget.mjs $URL 1440 dark /` | Prints only viewports with more than 8, and names each surface |
-| Contrast | `node $QA/contrast-capture.mjs $URL / 1440 dark $OUT/c-1440-dark "<id>,<id>+-600"`, then `python3 $QA/contrast.py $OUT/c-*` | No `FAIL`. Report the worst ratio per group. It handles `oklab()` and `oklch()` |
-| Touch targets and forced colours | `node $QA/targets.mjs $URL $OUT` | None of your controls is under 44px; buttons are visible in `forced-*.png` |
-| Theme and glass-mode behaviour | `node $QA/modes.mjs $URL` | `ALL PASSED` |
-| Before/after diff | `node $QA/shoot-sections.mjs $URL $OUT/after "/" "1440,390" "dark,light" "<id>"`, then `python3 $QA/diff.py $OUT/before $OUT/after $OUT/diff` | Only intended changes |
+| Build (never into the repo's `dist/` while others work) | `npx vite build --outDir <tmp dir> --emptyOutDir` | Builds; both entries render; each page links two CSS files |
+| No Tailwind backdrop utility | `grep -c tw-backdrop <build>/assets/*.css` | `0`; `.sr-only` is the only utility in the built CSS |
+| No backdrop-filter outside the material | `grep -rn -e "backdrop-filter *:" -e "backdropFilter" src/components src/styles/sections` | Only `LiquidGlass.jsx` |
+| No radius props or inline radii | `grep -rn -e "radius=" -e "borderRadius" src/components --include=*.jsx` | Only the 3 refract surfaces (`Nav.jsx` ×2, `Hero.jsx` ×1) and `LiquidGlass.jsx` |
+| Overflow and console | Load `/` and `/services/` at 360, 390, 768, 1024, 1440 and 1920 in both themes, scroll to the bottom | `documentElement.scrollWidth − innerWidth = 0`; no console errors or failed requests; **look at every section** |
+| Glass budget | Count elements whose computed `backdrop-filter` is not `none`, per viewport, while scrolling | Refract ≤ 3 (2 on `/services/`); frost visible ≤ 8 per viewport (measured peak: 5); no backdrop-filter element inside another; no opacity/filter/mask/will-change ancestor above one (§9) |
+| Reveals | Click every nav link, then check the viewport | No `.reveal:not(.is-visible)` element inside the viewport, in Chrome, Firefox **and WebKit** (see §9.1) |
+| Contrast | Hide the text, sample the real backdrop behind each text run, compute WCAG ratios | Body text ≥ 4.5:1 everywhere (measured floor 4.58:1); large text and UI boundaries ≥ 3:1 |
+| Touch targets | Emulate touch at 390 and at 1024–1366 with a coarse pointer | No control under 44px |
+| Theme and glass modes | Emulate `prefers-reduced-transparency`, `prefers-contrast: more` and `forced-colors`; use the switch | Default `refract` (Chromium, fine pointer); the emulations give `solid` with 0 backdrop filters and the switch on and disabled; the switch persists across reloads |
+| Anchor landing | Follow `#about`, `/#work` and so on | The eyebrow lands at about 104px below the top |
+| Layout shift | Lighthouse or a `layout-shift` PerformanceObserver at 390 | CLS < 0.01 (PRD R5 allows 0.1) |
+| Lighthouse (production build via `vite preview`) | `npx lighthouse <url> --chrome-path=/usr/bin/google-chrome` | Mobile `/`: Performance ≥ 90, Accessibility, Best Practices and SEO ≥ 95 (measured 98 / 100 / 100 / 100) |
 
 Your report must include:
 

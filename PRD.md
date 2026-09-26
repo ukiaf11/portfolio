@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | **Owner** | Upendra Kumar |
-| **Status** | In progress |
+| **Status** | Complete (pending commit and real-device check) |
 | **Started** | 2026-09-25 |
 | **Tracking** | [`TODO.md`](TODO.md) · decisions and progress log in [`MEMORY.md`](MEMORY.md) |
 
@@ -145,15 +145,22 @@ The site must be excellent from 360 px to 1920 px wide, with no horizontal scrol
 
 ## 8. Acceptance criteria
 
-- [ ] Every section on both pages uses the new glass material system. No old `surface` or
-      `card-glow` look remains.
-- [ ] The Live Websites section shows all 5 sites, each with a real screenshot and a working link.
-- [ ] `npm run build` passes, and both entries render.
-- [ ] No horizontal scroll at 360, 390, 768, 1024, 1440 or 1920 px, in either theme.
-- [ ] Measured text contrast is AA on glass in both themes.
-- [ ] Reduced motion, reduced transparency and keyboard navigation all work.
-- [ ] Lighthouse targets in R5 are met, or any gap is documented.
-- [ ] README, `PRD.md`, `MEMORY.md` and `TODO.md` are up to date.
+Status as of 2026-09-26, measured on the production build.
+
+- [x] Every section on both pages uses the new glass material system. No old `surface` or
+      `card-glow` look remains (grep: 0 usages).
+- [x] The Live Websites section shows all 5 sites, each with a real screenshot and a working link.
+      Every link returns 200, and the sites carry honest caveats where needed.
+- [x] `npm run build` passes, and both entries render.
+- [x] No horizontal scroll at 360, 390, 768, 1024, 1440 or 1920 px, in either theme.
+- [x] Measured text contrast is AA on glass in both themes (floor 4.58:1).
+- [x] Reduced motion, reduced transparency and keyboard navigation all work. So do
+      `prefers-contrast` and forced colours.
+- [x] Lighthouse targets in R5 are met. Mobile `/` scores 98 / 100 / 100 / 100, and CLS is 0.
+- [x] README, `PRD.md`, `MEMORY.md` and `TODO.md` are up to date.
+
+Not verified: real Safari on macOS and iOS, and real mid-range Android hardware. WebKit and Firefox
+were tested headless only, and headless engines do not paint `backdrop-filter`.
 
 ## 9. Risks
 

@@ -45,7 +45,7 @@
   --cap-edge: rgb(0 0 0 / 0.2);
   --cap-shadow: rgb(0 0 0 / 0.5);
   --dot-gloss: rgb(255 255 255 / 0.45);
-  --glow-a: 0.7; /* the site's brand glow behind its stage */
+  --work-glow-a: 0.7; /* the site's brand glow behind its stage */
   --window-bar: 42px;
   --window-pad: 6px;
   --card-pad-x: 22px; /* the card's side padding; the spec strip aligns to it */
@@ -58,7 +58,7 @@
   --shot-fill: #0e1322;
   --bezel-rgb: 52 58 80;
   --bezel-a: 0.72;
-  --glow-a: 0.6;
+  --work-glow-a: 0.6;
 }
 /* Solid glass (the switch, reduced transparency, more contrast) reaches the bezel too. */
 html[data-glass="solid"] .work { --bezel-a: var(--glass-a-solid); }
@@ -200,9 +200,14 @@ html[data-glass="solid"] .work { --bezel-a: var(--glass-a-solid); }
   z-index: -1;
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in oklab, var(--site) 60%, transparent), transparent);
-  opacity: var(--glow-a);
+  opacity: var(--work-glow-a);
   pointer-events: none;
 }
+/* The glow is a .reveal-fade leaf, so it must stay hidden until its case reveals. The
+   opacity above is in this later layer and would beat ui.css's hidden state, showing
+   the glow early and blinking it to 0 when the fade starts. Higher specificity in the
+   same layer wins; once revealed, ui.css's reveal-fade animation fades it in. */
+.reveal:not(.is-visible) .work-stage__glow { opacity: 0; }
 
 /* The window: a faux-glass frame (sibling, behind), a title strip, the screenshot. */
 .work-window {

@@ -1,7 +1,7 @@
 import { ArrowUpRight, Download, Github, Mail, MapPin, Phone } from 'lucide-react'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
-import { profile, sectionNo } from '../data/profile'
+import { profile, sectionNo, contactCta } from '../data/profile'
 
 /**
  * The closing call to action: ONE frosted panel on the wallpaper, split bento-style by a
@@ -17,15 +17,6 @@ import { profile, sectionNo } from '../data/profile'
  * The heading lives in the panel rather than in a <Section> head, so this renders its own
  * <section> with the shared .section frame and the same eyebrow capsule and ordinal.
  */
-
-// The pitch copy. It predates profile.js having a contact block; it moves there when the
-// design-system lead adds one (requested in the Contact report).
-const copy = {
-  eyebrow: 'Contact',
-  title: "Let's build something",
-  titleTail: 'that scales',
-  body: 'Open to full stack roles and freelance work — especially anything involving Django backends, microservices or AI integration. The fastest way to reach me is email.',
-}
 
 const channels = [
   {
@@ -106,14 +97,14 @@ export default function Contact() {
                     {no}
                   </span>
                 )}
-                {copy.eyebrow}
+                {contactCta.eyebrow}
               </p>
 
               <h2 id="contact-title" className="contact-pitch__title">
-                <span>{copy.title}</span> <span className="contact-pitch__title-2">{copy.titleTail}</span>
+                <span>{contactCta.title}</span> <span className="contact-pitch__title-2">{contactCta.titleTail}</span>
               </h2>
 
-              <p className="contact-pitch__copy">{copy.body}</p>
+              <p className="contact-pitch__copy">{contactCta.body}</p>
 
               <div className="contact-pitch__actions">
                 <a

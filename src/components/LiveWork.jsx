@@ -24,9 +24,9 @@ import { liveSites, liveSitesIntro } from '../data/profile'
  *  noteIcon      the glyph beside the site's note
  *  shows         what each screenshot actually shows, for the alt text
  *  desktopWidth  the real pixel width of `images.desktop` when it is not 1280. Omni Panel's
- *                is a native-resolution 1152x720 crop of the 1440x900 capture, centred on
- *                the sign-in card with equal room above and below (never upscaled), so its
- *                srcset descriptor has to say so.
+ *                (omni-panel-1152.webp) is a native-resolution 1152x720 crop of the
+ *                1440x900 capture, centred on the sign-in card with equal room above and
+ *                below (never upscaled), so its srcset descriptor has to say so.
  */
 const SITE_UI = {
   'mobile-accessories': { icon: Smartphone },
@@ -39,7 +39,11 @@ const SITE_UI = {
     shows: { desktop: 'sign-in screen', phone: 'sign-up screen' },
     desktopWidth: 1152,
   },
-  'ai-content-optimizer': { icon: Sparkles, dark: true },
+  'ai-content-optimizer': {
+    icon: Sparkles,
+    dark: true,
+    shows: { desktop: 'new-analysis form', phone: 'dashboard' },
+  },
 }
 const uiOf = (id) => SITE_UI[id] ?? {}
 
