@@ -1,0 +1,628 @@
+/* ==========================================================================
+   Nav · the floating toolbar and the mobile sheet            layer: components
+   >= 1024  [brand]    [ refracting capsule + liquid indicator ]    [theme][Résumé]
+   <  1024  [ (UK) Upendra Kumar                  (≡ Menu) ]  [theme]
+   Owned by the Nav agent. Everything in the header floats over arbitrary
+   content, so its controls count toward EVERY viewport's frost budget: the
+   header spends exactly 2 (the capsule and the toggle). Brand and Résumé are
+   faux glass with the chrome alpha.
+   ========================================================================== */
+
+/* ---- Tokens, scoped to the two roots (the header and the sheet) ----------- */
+.site-header,
+.scroll-edge,
+.sheet {
+  --ctl-h: 44px; /* every control in the bar; 44 = the touch minimum */
+  --hdr-pad: 12px; /* the bar's distance from the top edge */
+  /* Tint of the chrome's label band and of its faux pills. Light is raised from the
+     material's .56 so a dark screenshot scrolling under the bar cannot turn the
+     capsule a muddy mid-grey; the scroll edge below does the rest. */
+  --nav-chrome-a: 0.72;
+  /* The liquid indicator and the current row in the sheet */
+  --pill-bg: rgb(255 255 255 / 0.9);
+  --pill-ink: var(--accent-ink);
+  --pill-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 1),
+    0 0 0 0.5px rgb(20 36 72 / 0.12),
+    0 3px 10px -3px rgb(20 36 72 / 0.28);
+  --row-current-bg: rgb(var(--accent-rgb) / 0.11);
+  --row-current-ink: var(--accent-ink);
+  --scrim: rgb(10 16 36 / 0.24);
+}
+.dark .site-header,
+.dark .scroll-edge,
+.dark .sheet {
+  --nav-chrome-a: 0.68;
+  /* Dark: a blue-tinted drop with a white label. A grey pill brightens whatever
+     scrolls under the capsule and took the active label to 1.6:1 over a white
+     screenshot; this measures above 5.5:1 over the same backdrop. */
+  --pill-bg: rgb(10 102 230 / 0.55);
+  --pill-ink: #ffffff;
+  --pill-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
+    0 0 0 0.5px rgb(0 0 0 / 0.45),
+    0 4px 12px -4px rgb(0 0 0 / 0.6);
+  --row-current-bg: rgb(var(--accent-rgb) / 0.42);
+  --row-current-ink: var(--fg);
+  --scrim: rgb(0 0 0 / 0.5);
+}
+@media (min-width: 1024px) {
+  .site-header,
+  .scroll-edge,
+  .sheet {
+    --ctl-h: 48px;
+    --hdr-pad: 16px;
+  }
+}
+@media (min-width: 1280px) {
+  .site-header,
+  .scroll-edge,
+  .sheet { --ctl-h: 52px; }
+}
+/* Solid glass (the switch, reduced transparency, more contrast) reaches the chrome too. */
+html[data-glass="solid"] .site-header { --nav-chrome-a: var(--glass-a-solid); }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  /* :is() carries .dark's weight, so this beats the dark token above in both themes. */
+  html:is(.dark, :not(.dark)) .site-header { --nav-chrome-a: var(--glass-a-solid); }
+}
+
+/* ---- The bar ----------------------------------------------------------------- */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: var(--z-header);
+  padding: var(--hdr-pad) 12px 0;
+  pointer-events: none;
+}
+.site-header .glass {
+  --glass-a: var(--nav-chrome-a);
+  --glass-a-frost: var(--nav-chrome-a);
+  --glass-a-refract: var(--nav-chrome-a);
+}
+.site-header__inner {
+  position: relative;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.site-header__inner > * { pointer-events: auto; }
+
+/* ---- Scroll edge (iOS 26) --------------------------------------------------------
+   The wallpaper, painted a second time and masked so it is solid down to the
+   controls' centre line and eases out just below them. The wallpaper is fixed and
+   static, so at rest this band is pixel-identical to it and invisible; once content
+   scrolls up under the bar, it dissolves into the wallpaper instead of running between
+   the capsules. It adds no backdrop blur, only one static masked layer.
+   It is a sibling of the header, stacked just under the sheet (content < edge < sheet
+   < header), so the capsules still refract it, the sheet's scrim dims it like the rest
+   of the page, and it never paints over the sheet. No glass sits inside it, so its
+   mask and clip make no backdrop root for anything. */
+.scroll-edge {
+  --edge-solid: calc(var(--hdr-pad) + var(--ctl-h) * 0.5);
+  --edge-span: calc(100% - var(--edge-solid));
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: calc(var(--z-sheet) - 1);
+  height: calc(var(--hdr-pad) + var(--ctl-h) + 36px);
+  pointer-events: none;
+  /* The wallpaper inside is position: fixed, which overflow cannot clip. The clip-path
+     (and the mask) can, so the band never paints past its own box. */
+  clip-path: inset(0);
+  /* 1 - smoothstep(t): no visible start or end to the fade */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 var(--edge-solid),
+    rgb(0 0 0 / 0.96) calc(var(--edge-solid) + var(--edge-span) * 0.125),
+    rgb(0 0 0 / 0.84) calc(var(--edge-solid) + var(--edge-span) * 0.25),
+    rgb(0 0 0 / 0.5) calc(var(--edge-solid) + var(--edge-span) * 0.5),
+    rgb(0 0 0 / 0.16) calc(var(--edge-solid) + var(--edge-span) * 0.75),
+    rgb(0 0 0 / 0.04) calc(var(--edge-solid) + var(--edge-span) * 0.875),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0,
+    #000 var(--edge-solid),
+    rgb(0 0 0 / 0.96) calc(var(--edge-solid) + var(--edge-span) * 0.125),
+    rgb(0 0 0 / 0.84) calc(var(--edge-solid) + var(--edge-span) * 0.25),
+    rgb(0 0 0 / 0.5) calc(var(--edge-solid) + var(--edge-span) * 0.5),
+    rgb(0 0 0 / 0.16) calc(var(--edge-solid) + var(--edge-span) * 0.75),
+    rgb(0 0 0 / 0.04) calc(var(--edge-solid) + var(--edge-span) * 0.875),
+    transparent 100%
+  );
+}
+/* Sheet open: stay solid down to the sheet's top edge, so nothing shows in the gap
+   between the capsule and the sheet. */
+.scroll-edge[data-sheet] {
+  --edge-solid: calc(var(--hdr-pad) + var(--ctl-h) + 10px);
+}
+@media (forced-colors: active) {
+  /* The wallpaper is hidden in forced colours; the band becomes a Canvas fade. */
+  .scroll-edge { background: Canvas; }
+}
+
+/* ---- Brand (desktop): faux capsule -------------------------------------------- */
+.brand {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  height: var(--ctl-h);
+  padding: 0 4px;
+  text-decoration: none;
+}
+/* The avatar: accent fill, a white monogram, a specular top edge. */
+.brand__mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(var(--ctl-h) - 10px);
+  height: calc(var(--ctl-h) - 10px);
+  border-radius: var(--r-pill);
+  color: var(--on-accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  /* The sheen stays above the monogram and the fill never lightens behind it, so the
+     white letters hold 4.5:1+ on the accent in both themes. */
+  background:
+    radial-gradient(110% 60% at 30% -18%, rgb(255 255 255 / 0.34), transparent 58%),
+    linear-gradient(160deg, var(--accent-fill) 30%, color-mix(in oklab, var(--accent-fill) 70%, var(--sys-indigo)) 62%, color-mix(in oklab, var(--sys-indigo) 70%, black));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 -1px 1px rgb(0 0 0 / 0.15),
+    0 4px 10px -4px rgb(var(--accent-rgb) / 0.6);
+}
+.brand__name {
+  display: none;
+  padding-right: 0.9rem;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 1024px) {
+  .brand { display: inline-flex; justify-self: start; }
+}
+@media (min-width: 1280px) {
+  .brand__name { display: inline; }
+}
+
+/* ---- The capsule ------------------------------------------------------------------
+   Phone and tablet: brand + Menu. Desktop: the links and the liquid indicator. */
+.nav-capsule {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: var(--ctl-h);
+  padding: 0 4px;
+}
+.nav-capsule__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: var(--ctl-h);
+  margin-block: -1px; /* the capsule's 1px border: keep the target a full 44px */
+  padding-right: 12px;
+  border-radius: var(--r-pill);
+  color: var(--glass-fg);
+  text-decoration: none;
+}
+.nav-capsule__brand .brand__mark {
+  width: calc(var(--ctl-h) - 8px);
+  height: calc(var(--ctl-h) - 8px);
+}
+.nav-capsule__name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.022em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The Menu button: a full-height (44px) target holding a faux plate. */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  flex: none;
+  height: var(--ctl-h);
+  margin: -1px 0 -1px auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--glass-fg);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-menu__plate {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: calc(var(--ctl-h) - 10px);
+  padding: 0 15px 0 12px;
+  border: 1px solid transparent; /* painted in forced colours */
+  border-radius: var(--r-pill);
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--inset-ring),
+    0 1px 3px -1px rgb(0 0 0 / 0.18);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  transition: transform var(--dur-gel) var(--ease-gel), background-color 0.25s ease;
+}
+@media (hover: hover) {
+  .nav-menu:hover .nav-menu__plate { background: var(--inset-ring); }
+}
+.nav-menu[aria-expanded="true"] .nav-menu__plate {
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+  color: var(--pill-ink);
+}
+.nav-menu:active .nav-menu__plate {
+  transform: scale(0.94);
+  transition-duration: var(--dur-press);
+}
+/* Focus: the ring hugs the visible plate (and the brand), so it stays inside the capsule. */
+.nav-menu:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.nav-menu:focus-visible .nav-menu__plate {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--focus-halo);
+}
+.nav-capsule__brand:focus-visible {
+  outline-offset: -5px;
+  box-shadow: inset 0 0 0 2px var(--focus-halo);
+}
+.nav-menu__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+.nav-menu__icon > svg {
+  position: absolute;
+  transition: transform var(--dur-morph) var(--ease-gel), opacity 0.25s ease;
+}
+.nav-menu__close { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+.nav-menu[aria-expanded="true"] .nav-menu__close { opacity: 1; transform: none; }
+.nav-menu[aria-expanded="true"] .nav-menu__open { opacity: 0; transform: rotate(90deg) scale(0.4); }
+.nav-menu__label { display: grid; }
+.nav-menu__label > span { grid-area: 1 / 1; }
+.nav-menu__label > span:not([data-on]) { visibility: hidden; }
+
+/* ---- Desktop links --------------------------------------------------------------- */
+@property --x1 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --x2 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.nav-desktop { display: none; }
+.nav-capsule__list {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nav-link {
+  position: relative; /* lifts it over the pill */
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  padding: 0 9px;
+  border-radius: var(--r-pill);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+  color: var(--glass-fg);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.nav-link__glyph {
+  flex: none;
+  margin-top: -1px;
+  opacity: 0.62;
+}
+@media (min-width: 1180px) {
+  .nav-link { padding: 0 12px; }
+}
+@media (min-width: 1280px) {
+  .nav-link { padding: 0 14px; font-size: 14px; }
+}
+@media (hover: hover) {
+  .nav-link:not([aria-current]):hover { color: var(--accent-ink); }
+}
+.nav-link[aria-current] { color: var(--pill-ink); }
+.nav-link[aria-current] .nav-link__glyph { opacity: 0.85; }
+
+/* The liquid indicator. --x1/--x2 are its edges; the one in the direction of travel
+   leads on an overshooting curve, the other trails, so the drop stretches and then
+   gathers itself up. The inner blob squishes while it travels (WAAPI, Nav.jsx). */
+.nav-indicator {
+  --d1: 480ms;
+  --d2: 480ms;
+  --e1: var(--ease-trail);
+  --e2: var(--ease-trail);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--x1);
+  width: calc(var(--x2) - var(--x1));
+  z-index: 0;
+  pointer-events: none;
+  transition:
+    --x1 var(--d1) var(--e1),
+    --x2 var(--d2) var(--e2),
+    opacity 0.3s ease;
+}
+.nav-indicator[data-dir="right"] { --d1: 600ms; --e1: var(--ease-trail); --d2: 380ms; --e2: var(--ease-lead); }
+.nav-indicator[data-dir="left"]  { --d1: 380ms; --e1: var(--ease-lead);  --d2: 600ms; --e2: var(--ease-trail); }
+.nav-indicator[data-instant] { transition: opacity 0.3s ease; }
+.nav-indicator[data-hidden] { opacity: 0; }
+.nav-indicator__blob {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-pill);
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+}
+
+@media (min-width: 1024px) {
+  .site-header { padding-inline: 24px; }
+  .site-header__inner {
+    display: grid;
+    /* The capsule stays centred while both sides fit; if one side needs more room,
+       the capsule gives way instead of anything overflowing. */
+    grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+    gap: 12px;
+  }
+  .nav-capsule {
+    flex: none;
+    padding: 4px;
+  }
+  .nav-capsule__brand,
+  .nav-menu { display: none; }
+  .nav-desktop {
+    position: relative; /* the links' offsetParent and the indicator's box */
+    display: block;
+    height: 100%;
+  }
+}
+
+/* ---- Actions --------------------------------------------------------------------- */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+}
+@media (min-width: 1024px) {
+  .nav-actions { justify-self: end; gap: 10px; }
+}
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: var(--ctl-h);
+  height: var(--ctl-h);
+  padding: 0;
+  color: var(--glass-fg);
+  cursor: pointer;
+}
+.theme-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+.theme-icon > svg {
+  position: absolute;
+  transition: transform var(--dur-morph) var(--ease-gel), opacity 0.3s ease;
+}
+.theme-icon__sun { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+.theme-icon[data-dark] .theme-icon__sun { opacity: 1; transform: none; }
+.theme-icon[data-dark] .theme-icon__moon { opacity: 0; transform: rotate(90deg) scale(0.4); }
+
+/* Résumé keeps its visible label at every desktop width. */
+.resume-btn {
+  display: none;
+  height: var(--ctl-h);
+  padding-inline: 0.9rem 1.05rem;
+  gap: 0.45rem;
+}
+@media (min-width: 1024px) {
+  .resume-btn { display: inline-flex; }
+}
+@media (min-width: 1280px) {
+  .resume-btn { padding-inline: 1.15rem 1.3rem; }
+}
+
+/* ---- Mobile sheet ----------------------------------------------------------------- */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sheet);
+  pointer-events: none;
+}
+.sheet.is-open { pointer-events: auto; }
+@media (min-width: 1024px) {
+  .sheet { display: none; }
+}
+.sheet__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.sheet.is-open .sheet__scrim { opacity: 1; }
+
+.sheet__panel {
+  --sheet-top: calc(var(--hdr-pad) + var(--ctl-h) + 10px);
+  position: absolute;
+  top: var(--sheet-top);
+  right: 12px;
+  left: 12px;
+  max-width: 440px;
+  margin-left: auto;
+  border-radius: var(--r-panel);
+  /* Grows out of the Menu button (just left of the 44px toggle). */
+  transform-origin: calc(100% - var(--ctl-h) - 48px) -20px;
+  opacity: 0;
+  transform: scale(0.9) translateY(-8px);
+  visibility: hidden;
+  transition:
+    opacity 0.2s ease,
+    transform 0.36s var(--ease-out),
+    visibility 0s linear 0.36s;
+}
+.sheet.is-open .sheet__panel {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  /* visibility is deliberately NOT in this list: it must flip at once, so focus can move
+     into the sheet in the same frame (reduced motion turns a "0s" transition into a real
+     0.01ms one, which would still read "hidden" at that moment). */
+  transition:
+    opacity 0.24s ease,
+    transform var(--dur-morph) var(--ease-gel);
+}
+/* The scroller is inside the glass, so the specular rim is never clipped. */
+.sheet__scroll {
+  max-height: calc(100dvh - var(--sheet-top) - 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px;
+  border-radius: inherit;
+}
+
+/* Grouped list, iOS Settings style: a nested faux plate, concentric with the sheet
+   (32 - 10 = 22), rows with an app-icon tile, hairlines inset to the label. */
+.sheet__group {
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  border-radius: var(--r-nested);
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--inset-ring);
+}
+.sheet__list > li + li::before {
+  content: "";
+  display: block;
+  height: 1px;
+  margin: 0 12px 0 53px;
+  background: var(--hairline);
+}
+.sheet__link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 48px;
+  padding: 0 12px 0 11px;
+  border-radius: calc(var(--r-nested) - 5px);
+  color: var(--glass-fg);
+  font-size: var(--text-headline);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.sheet__label { flex: 1; min-width: 0; }
+.sheet__trail {
+  flex: none;
+  color: var(--fg-subtle);
+}
+.sheet__trail[data-page] { color: var(--accent-ink); }
+@media (hover: hover) {
+  .sheet__link:hover { background: var(--inset); }
+}
+.sheet__link:active { background: var(--inset); }
+.sheet__link[aria-current] {
+  background: var(--row-current-bg);
+  color: var(--row-current-ink);
+  font-weight: 600;
+}
+.sheet__link[aria-current] .sheet__trail { color: currentColor; }
+
+/* The "Reduce transparency" row: tile, label, switch at the trailing edge. */
+.sheet__prefs {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 10px;
+  padding: 2px 5px 2px 16px;
+}
+.sheet__pref {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 7px 0 0;
+  column-gap: 12px;
+  color: var(--glass-fg);
+  font-size: var(--text-headline);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.sheet__pref .switch__label { order: 1; flex: 1; }
+.sheet__pref .switch__track { order: 2; }
+.sheet__pref .switch__note {
+  order: 3;
+  padding-left: 0;
+  margin-top: -6px;
+  padding-bottom: 8px;
+  font-size: var(--text-footnote);
+}
+
+.sheet__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.sheet__actions .btn {
+  height: 50px;
+  padding-inline: 1rem;
+}
+
+@media (forced-colors: active) {
+  .nav-indicator__blob { background: Highlight; forced-color-adjust: none; opacity: 0.35; }
+  .nav-link[aria-current],
+  .sheet__link[aria-current] { text-decoration: underline; text-underline-offset: 4px; }
+  .sheet__group { border: 1px solid CanvasText; }
+  .nav-menu__plate { border-color: ButtonText; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-indicator { transition: opacity 0.2s ease; }
+  .sheet__panel,
+  .sheet.is-open .sheet__panel { transform: none; }
+  /* The global kill switch turns every element's implicit "all 0s" into a real 0.01ms
+     transition, inherited visibility included, and a link that is still "hidden" for
+     that instant refuses focus. Nothing in the sheet animates here anyway. */
+  .sheet__panel * { transition-property: none; }
+  .nav-menu:active .nav-menu__plate { transform: none; }
+}

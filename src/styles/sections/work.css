@@ -1,0 +1,618 @@
+/* ==========================================================================
+   Live work (#work)                                                  layer: sections
+   Owned by the Work agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Anatomy of a case (.work-item > article.work-case), in DOM order:
+     .work-case__card   ONE legible frost panel: the pitch and the one real link
+     .work-case__media  .work-stage: the site's brand glow, a Tahoe window (faux
+                        frame, traffic lights, clear+dim hostname capsule,
+                        screenshot) and a phone in a glass bezel
+     .work-case__specs  the spec strip (Highlights, Built with): type on the
+                        wallpaper, faux chips, no panel
+   Layout
+     phones    stage, card, specs, stacked
+     tablets   stage across; card and specs side by side, the card lifted over
+               the window's lower edge
+     desktop   12 columns: the stage (8) with the card (5) overlapping one
+               column, the phone hanging off the outer corner, and the spec
+               strip under both, beside the phone. Every other case mirrors.
+   Backdrop cost per case: the card (frost) + the hostname capsule (clear).
+   ========================================================================== */
+
+/* Section tokens, scoped to the section root. */
+.work {
+  --shot-ring: rgb(20 36 72 / 0.16); /* the 1px ring round every screenshot */
+  --shot-shadow: rgb(30 52 110 / 0.42);
+  --shot-contact: rgb(0 0 0 / 0.06); /* the tight contact shadow under a window */
+  --shot-fill: #f4f6fb; /* behind a screenshot until it loads */
+  --bezel-rgb: 255 255 255; /* the phone's glass bezel */
+  --bezel-a: 0.62;
+  --bezel: rgb(var(--bezel-rgb) / var(--bezel-a));
+  --bezel-rim: rgb(255 255 255 / 0.7);
+  --bezel-ring: rgb(255 255 255 / 0.22);
+  --light-close: #ff5f57; /* traffic lights (decorative) */
+  --light-min: #febc2e;
+  --light-max: #28c840;
+  --light-edge: rgb(0 0 0 / 0.22);
+  /* The hostname capsule is clear+dim glass, dark in both themes, so its
+     highlights are theme-independent. */
+  --cap-rim: rgb(255 255 255 / 0.32);
+  --cap-ring: rgb(255 255 255 / 0.22);
+  --cap-divider: rgb(255 255 255 / 0.28);
+  --cap-edge: rgb(0 0 0 / 0.2);
+  --cap-shadow: rgb(0 0 0 / 0.5);
+  --dot-gloss: rgb(255 255 255 / 0.45);
+  --glow-a: 0.7; /* the site's brand glow behind its stage */
+  --window-bar: 42px;
+  --window-pad: 6px;
+  --card-pad-x: 22px; /* the card's side padding; the spec strip aligns to it */
+}
+@media (min-width: 640px) { .work { --card-pad-x: 32px; } }
+@media (min-width: 1280px) { .work { --card-pad-x: 36px; } }
+.dark .work {
+  --shot-ring: rgb(255 255 255 / 0.16);
+  --shot-shadow: rgb(0 0 0 / 0.85);
+  --shot-fill: #0e1322;
+  --bezel-rgb: 52 58 80;
+  --bezel-a: 0.72;
+  --glow-a: 0.6;
+}
+/* Solid glass (the switch, reduced transparency, more contrast) reaches the bezel too. */
+html[data-glass="solid"] .work { --bezel-a: var(--glass-a-solid); }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  html:root .work { --bezel-a: var(--glass-a-solid); }
+}
+@media (max-width: 640px) {
+  .work {
+    --window-bar: 36px;
+    --window-pad: 4px;
+  }
+}
+
+/* ---- Index row: one capsule per site ------------------------------------- */
+.work-index {
+  margin-bottom: clamp(56px, 7vw, 96px);
+}
+.work-index__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.work-index__list > li { min-width: 0; max-width: 100%; }
+.work-index__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: var(--target-min);
+  padding: 0 18px 0 15px;
+  font-size: 14.5px;
+  font-weight: 550;
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.work-index__dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--site);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--site) 22%, transparent),
+    inset 0 1px 0 var(--dot-gloss);
+}
+/* The ordinal: the same "01" as the case card, set as a quiet tabular figure with a
+   hairline after it, so the name stays the thing you read. */
+.work-index__no {
+  margin-left: -1px;
+  padding-right: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--fg-muted);
+  box-shadow: 1px 0 0 var(--hairline);
+}
+.work-index__name { min-width: 0; }
+@media (max-width: 480px) {
+  .work-index__list { gap: 8px; }
+  .work-index__link { padding: 0 15px 0 13px; font-size: 14px; gap: 9px; }
+  /* Phones: the ordinal would cost the row one or two extra lines; the dot and the
+     name are enough to scan. */
+  .work-index__no { display: none; }
+}
+
+/* ---- The list of cases ----------------------------------------------------- */
+.work-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: clamp(88px, 10vw, 144px);
+}
+.work-item {
+  position: relative; /* the index row jumps here; html's scroll-padding clears the header */
+}
+.work-case {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 20px;
+}
+/* Pictures first on screen; the DOM keeps the heading first. */
+.work-case__media { grid-row: 1; }
+.work-case__card { grid-row: 2; }
+.work-case__specs { grid-row: 3; }
+
+/* Tablets: the card and the specs share a row under the stage, and the card rises
+   over the window's lower edge (the phone hangs on the other side). */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .work-case {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    column-gap: 32px;
+    row-gap: 28px;
+    align-items: start;
+  }
+  .work-case__media { grid-column: 1 / -1; }
+  .work-case__card {
+    grid-column: 1;
+    z-index: 2;
+    /* The stage's phone room (--phone-room) plus 40px of window. */
+    margin-top: calc(-1 * (var(--phone-room) + 40px + 28px));
+  }
+  .work-case__specs { grid-column: 2; grid-row: 2; padding-top: 4px; }
+  .work-item { --phone-room: calc((100vw - 64px) * 0.2); }
+}
+
+/* Desktop: twelve columns, mirrored on every other case. */
+@media (min-width: 1024px) {
+  .work-case {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: clamp(32px, 3vw, 44px);
+    align-items: start;
+  }
+  .work-case__media { grid-column: 1 / span 8; grid-row: 1; }
+  .work-case__card { grid-column: 8 / span 5; grid-row: 1; z-index: 2; margin-top: 56px; }
+  .work-case__specs { grid-column: 3 / -1; grid-row: 2; }
+  .work-item--flip .work-case__media { grid-column: 5 / span 8; }
+  .work-item--flip .work-case__card { grid-column: 1 / span 5; }
+  .work-item--flip .work-case__specs { grid-column: 1 / span 10; }
+}
+
+/* ---- Stage ----------------------------------------------------------------- */
+.work-stage {
+  position: relative;
+  container-type: inline-size;
+  padding-bottom: var(--phone-room, 18%); /* room for the phone hanging below the window */
+}
+/* The site's own brand colour, pooled softly behind its screenshot. The glass card
+   that overlaps the stage picks it up, so each site tints its own card. */
+.work-stage__glow {
+  position: absolute;
+  inset: -10% -8% -4%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--site) 60%, transparent), transparent);
+  opacity: var(--glow-a);
+  pointer-events: none;
+}
+
+/* The window: a faux-glass frame (sibling, behind), a title strip, the screenshot. */
+.work-window {
+  position: relative;
+  padding: 0 var(--window-pad) var(--window-pad);
+  border-radius: var(--r-card);
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+.work-window__frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-rim-soft),
+    0 0 0 0.5px var(--glass-edge),
+    0 2px 6px var(--shot-contact),
+    0 46px 90px -36px var(--shot-shadow);
+}
+.work-window__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--window-bar);
+  padding-inline: 10px;
+}
+.work-window__lights {
+  display: flex;
+  gap: 8px;
+}
+.work-window__lights i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--light-close);
+  box-shadow: inset 0 0 0 0.5px var(--light-edge);
+}
+.work-window__lights i:nth-child(2) { background: var(--light-min); }
+.work-window__lights i:nth-child(3) { background: var(--light-max); }
+
+.work-window__shot {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: calc(var(--r-card) - var(--window-pad));
+  background: var(--shot-fill);
+  box-shadow: 0 0 0 1px var(--shot-ring);
+}
+
+/* The hostname capsule: clear+dim glass, centred on the strip. Decorative (the real
+   link and the printed hostname are in the card), so it is aria-hidden. */
+.work-address {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: calc(100% - 150px);
+  height: 28px;
+  padding: 0 13px 0 11px;
+  border: 1px solid transparent; /* painted by forced colours */
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 var(--cap-rim),
+    inset 0 0 0 0.5px var(--cap-ring),
+    0 0 0 0.5px var(--cap-edge),
+    0 6px 14px -8px var(--cap-shadow);
+}
+.work-address svg { flex: none; opacity: 0.85; }
+.work-address__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 9px;
+  font-weight: 600;
+  box-shadow: 1px 0 0 var(--cap-divider);
+}
+.work-address__live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 2.5px color-mix(in oklab, var(--live) 30%, transparent);
+}
+.work-address__host {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The phone: a glass bezel hanging off the window's lower outer corner. Phones and
+   tablets hang it at the right, inside the window's width. */
+.work-phone {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--window-bar) + 27cqw);
+  right: 3cqw;
+  width: 25cqw;
+  padding: 0.75cqw;
+  border-radius: 3.55cqw; /* concentric: screen radius + bezel */
+  background: var(--bezel);
+  box-shadow:
+    inset 0 1px 0 var(--bezel-rim),
+    inset 0 0 0 1px var(--bezel-ring),
+    0 0 0 0.5px var(--glass-edge),
+    0 34px 70px -24px var(--shot-shadow);
+}
+.work-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2.8cqw;
+}
+@media (max-width: 639px) {
+  .work-stage { padding-bottom: 20%; }
+  .work-phone { top: calc(var(--window-bar) + 24cqw); width: 26cqw; right: 2.5cqw; }
+}
+/* Desktop: the phone hangs off the OUTER lower corner into the spec strip's row, beside
+   the strip (which starts at column 3), so the stage reserves no room below the window.
+   The hang never eats more of the page gutter than leaves 24px to the viewport edge
+   (between 1024 and 1280 the gutter is only 32px, and a full 3.5cqw hang sat 4px from it). */
+@media (min-width: 1024px) {
+  .work-stage { padding-bottom: 0; }
+  .work-stage__glow { inset: -12% -8% -14%; }
+  .work-phone {
+    --phone-hang: min(3.5cqw, max(0px, (100vw - var(--page-max)) / 2) + 8px);
+    top: calc(var(--window-bar) + 33cqw);
+    right: auto;
+    left: calc(-1 * var(--phone-hang));
+    width: 23.5cqw;
+  }
+  .work-item--flip .work-phone { left: auto; right: calc(-1 * var(--phone-hang)); }
+}
+
+/* Mouse-only duplicates of the Visit link: one over the whole stage, one over the
+   phone (on desktop it hangs outside the stage's box). */
+.work-stage__hit,
+.work-phone__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: var(--r-card);
+}
+.work-phone__hit { border-radius: inherit; }
+.work-stage__hit:focus-visible,
+.work-phone__hit:focus-visible { outline: none; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .work-stage:has(a:hover) .work-window { transform: translateY(-4px); }
+  .work-stage:has(a:hover) .work-phone { transform: translateY(-8px); }
+  .work-phone { transition: transform var(--dur-gel) var(--ease-gel); }
+}
+
+/* Narrow windows (container queries on the stage): a compact strip whose hostname
+   capsule sits at the right, then (under 340px) no traffic lights at all. The whole
+   hostname stays visible down to a 360px phone; nothing else ever sits on the strip. */
+@container (max-width: 560px) {
+  .work-window__bar { padding-inline: 9px; }
+  .work-window__lights { gap: 5px; }
+  .work-window__lights i { width: 8px; height: 8px; }
+  .work-address {
+    left: auto;
+    right: 5px;
+    translate: 0 -50%;
+    max-width: calc(100% - 54px);
+    height: 25px;
+    padding: 0 9px 0 8px;
+    gap: 5px;
+    font-size: 11px;
+    letter-spacing: -0.01em;
+  }
+  .work-address svg { display: none; }
+  .work-address__live { padding-right: 6px; gap: 5px; }
+  .work-address__live::before { width: 6px; height: 6px; box-shadow: 0 0 0 2px color-mix(in oklab, var(--live) 30%, transparent); }
+}
+@container (max-width: 340px) {
+  .work-window__lights { display: none; }
+  .work-address {
+    left: 50%;
+    right: auto;
+    translate: -50% -50%;
+    max-width: calc(100% - 10px);
+  }
+}
+
+/* ---- Card: the pitch ---------------------------------------------------------- */
+.work-card {
+  padding: 24px var(--card-pad-x) 26px;
+  border-radius: var(--r-panel);
+}
+@media (min-width: 640px) {
+  .work-card { padding: 30px var(--card-pad-x) 32px; }
+}
+@media (min-width: 1280px) {
+  .work-card { padding: 34px var(--card-pad-x) 36px; }
+}
+/* Light theme, dark screenshot: the part of the panel that crosses the screenshot
+   would read as a grey band. A higher tint floor removes it. Solid, reduced
+   transparency and increased contrast keep their own (higher) alphas. */
+html:not(.dark):not([data-glass="solid"]) .work-item--dark .work-card {
+  --glass-a-legible: 0.9;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  html:not(.dark):not([data-glass="solid"]) .work-item--dark .work-card {
+    --glass-a-legible: var(--glass-a-solid);
+  }
+}
+
+.work-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.work-card__no {
+  padding-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.work-card__no span { color: var(--fg-muted); font-weight: 500; }
+
+.work-card__name {
+  margin-top: 18px;
+  font-size: var(--text-title-2);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.work-card__name-text { position: relative; }
+.work-card__name-arrow {
+  display: inline-block;
+  margin-left: 0.12em;
+  vertical-align: -0.08em;
+  color: var(--fg-subtle);
+  transition: transform var(--dur-gel) var(--ease-gel), color 0.2s;
+}
+.work-card__name-hit {
+  position: absolute;
+  inset: -6px -8px;
+  border-radius: var(--r-tile);
+}
+.work-card__name-hit:focus-visible { outline: none; }
+@media (hover: hover) {
+  .work-card__name-text:hover .work-card__name-arrow {
+    color: var(--accent-ink);
+    transform: translate(2px, -2px);
+  }
+  .work-card__name-text:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.14em;
+    text-decoration-color: color-mix(in oklab, var(--accent-ink) 55%, transparent);
+  }
+}
+
+.work-card__meta {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.work-card__context svg { flex: none; }
+
+.work-card__tagline {
+  margin-top: 16px;
+  font-size: var(--text-headline);
+  font-weight: 550;
+  line-height: 1.42;
+  letter-spacing: -0.016em;
+}
+.work-card__summary {
+  margin-top: 10px;
+  font-size: var(--text-subhead);
+  line-height: 1.62;
+  color: var(--fg-muted);
+}
+
+.work-card__note {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r-inset);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+.work-card__note svg { flex: none; margin-top: 2px; color: var(--accent-ink); }
+
+.work-card__actions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+.work-card__host {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: var(--text-footnote);
+  font-weight: 500;
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+.work-card__host svg { flex: none; }
+
+/* ---- Spec strip ---------------------------------------------------------------
+   Type straight on the wallpaper: a caption label over each group, the features
+   as a checked list, the stack as faux chips. No panel, so no backdrop cost. */
+.work-specs {
+  display: grid;
+  gap: 22px;
+  padding-inline: var(--card-pad-x); /* on phones, align with the card's text above */
+}
+@media (min-width: 640px) {
+  .work-specs { padding-inline: 0; }
+}
+/* Desktop: the strip follows the case's 12-column grid. The group under the card lines
+   up with the card's text; a hairline on the card's edge divides the two groups. */
+@media (min-width: 1024px) {
+  .work-specs {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+  .work-specs__group--features { grid-column: 1 / span 5; grid-row: 1; }
+  .work-specs__group--stack {
+    grid-column: 6 / span 5;
+    grid-row: 1;
+    padding-left: var(--card-pad-x);
+    box-shadow: -1px 0 0 var(--hairline);
+  }
+  .work-item--flip .work-specs__group--stack {
+    grid-column: 1 / span 5;
+    padding-right: 24px;
+    box-shadow: 1px 0 0 var(--hairline);
+  }
+  .work-item--flip .work-specs__group--features { grid-column: 6 / span 5; padding-left: 12px; }
+}
+.work-specs__label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.work-specs__features {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+.work-specs__features li {
+  display: flex;
+  gap: 10px;
+  font-size: var(--text-subhead);
+  font-weight: 450;
+  line-height: 1.42;
+  letter-spacing: -0.008em;
+}
+.work-specs__features svg { flex: none; margin-top: 2px; color: var(--accent-ink); }
+.work-specs__stack {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+/* Off the card, a chip sits on the bare wallpaper, whose brightest dark-theme fields
+   pulled muted text under 4.5:1. The material tint plus full-strength text holds it
+   (and solid mode reaches it through --glass-a). */
+.work-specs__stack .chip {
+  color: var(--fg);
+  background: rgb(var(--glass-tint) / var(--glass-a));
+}
+
+/* ---- Modes ---------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .work-window,
+  .work-phone,
+  .work-card__name-arrow { transition: none; }
+}
+@media (forced-colors: active) {
+  .work-window__lights,
+  .work-stage__glow { display: none; }
+  /* Keep the decorative dots as plain text-coloured marks instead of empty gaps. */
+  .work-index__dot,
+  .work-address__live::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+    box-shadow: none;
+  }
+  .work-phone { border: 1px solid CanvasText; }
+  .work-window__shot { outline: 1px solid CanvasText; }
+  .work-specs__group--stack { border-left: 1px solid CanvasText; }
+}

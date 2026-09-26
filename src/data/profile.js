@@ -213,6 +213,153 @@ export const projects = [
 ]
 
 /**
+ * Live websites — real, deployed builds a visitor can click through to.
+ *
+ * Every word here was taken from what the live site actually shows (researched by
+ * rendering each one on 2026-09-25). Do not add metrics or features that are not on the
+ * site — AI Content Optimizer's own marketing figures, for instance, are hard-coded copy
+ * on that site, not measured results, so they are deliberately not repeated here.
+ *
+ *  kind     — the matching `websiteTypes` id, so /services/ can link a type to its example.
+ *  images   — captured locally with headless Chrome, stored as WebP in /public/work.
+ *  note     — an honest caveat the visitor should know before clicking (login wall, demo data).
+ *  accent   — the site's own brand colour, sampled from its UI; used for a subtle tint only.
+ *  context  — who it was built for or at, when it is not a personal build.
+ */
+export const liveSites = [
+  {
+    id: "mobile-accessories",
+    name: "Mobile Accessories Shop",
+    url: "https://mobile-accessories-shop-fawn.vercel.app/",
+    kind: "online-shop",
+    category: "Online shop",
+    tagline: "A phone-accessories storefront that only shows what fits your exact model.",
+    summary:
+      "Shoppers pick a smartphone or tablet, then their brand and model, and the catalogue narrows to the cases, tempered glass, chargers and audio gear that actually fit. Items go into a request list that is sent to the shop for pickup or local delivery, and the shop calls back to confirm stock and the final price.",
+    features: [
+      "Model finder across 21 brands and 200 models",
+      "Filterable, sortable product catalogue",
+      "Saved request list",
+      "Pickup or local-delivery order requests",
+      "Custom request form for unlisted models",
+    ],
+    stack: ["React 19", "Vite", "Tailwind CSS v4", "Motion", "Zustand", "React Hook Form", "Zod", "Vercel Functions"],
+    accent: "#6d5dfc",
+    images: {
+      desktop: "/work/mobile-accessories-1280.webp",
+      desktopSmall: "/work/mobile-accessories-640.webp",
+      mobile: "/work/mobile-accessories-mobile.webp",
+    },
+  },
+  {
+    id: "hotel-express",
+    name: "Hotel Express",
+    url: "https://hotel-web-mu-ten.vercel.app/",
+    kind: "booking-site",
+    category: "Ordering platform",
+    tagline: "Meals from neighbourhood hotel kitchens, booked into a delivery or pickup slot up to 14 days ahead.",
+    summary:
+      "Diners browse verified hotels and their menus, build a cart and book a home-delivery or self-pickup slot, paying cash on delivery or at the counter. Hotel owners get their own workspace — dashboard, menu manager, live order queue and sales reports with CSV and PDF export — while an admin console handles hotel verification and support.",
+    features: [
+      "Hotel search with quick filters",
+      "Delivery or pickup slot scheduling",
+      "Owner dashboard and live order queue",
+      "Sales reports with CSV and PDF export",
+      "Admin verification console",
+    ],
+    stack: ["React 19", "Vite", "React Router", "Zustand", "Custom CSS design tokens"],
+    accent: "#f68d31",
+    note: "Live demo — data stays in your browser, with one-click demo accounts for each role.",
+    images: {
+      desktop: "/work/hotel-express-1280.webp",
+      desktopSmall: "/work/hotel-express-640.webp",
+      mobile: "/work/hotel-express-mobile.webp",
+    },
+  },
+  {
+    id: "saloon",
+    name: "Upendra Salon",
+    url: "https://saloon-shop-web.vercel.app/",
+    kind: "booking-site",
+    category: "Booking site",
+    tagline: "Salon bookings with UPI payment, combo discounts and five lucky free slots every day.",
+    summary:
+      "Visitors browse the grooming menu by category, add services to one booking and pay by UPI QR code or UPI app, with 10% off applied automatically when two or more services are booked. Every booking gets a QR coupon to show at the salon, and a live daily panel tracks the five lucky slots that win a free haircut, shave and face massage.",
+    features: [
+      "Filterable service menu with prices",
+      "Automatic 10% combo discount",
+      "UPI QR and UPI-app payment",
+      "QR coupon for every booking",
+      "Live daily lucky-slot tracker",
+    ],
+    stack: ["Next.js 16", "React", "Tailwind CSS v4", "Zod", "REST API"],
+    accent: "#b2502a",
+    images: {
+      desktop: "/work/saloon-1280.webp",
+      desktopSmall: "/work/saloon-640.webp",
+      mobile: "/work/saloon-mobile.webp",
+    },
+  },
+  {
+    id: "omni-panel",
+    name: "Omni Panel",
+    url: "https://next.bol7.com/billing",
+    kind: "customer-portal",
+    category: "SaaS dashboard",
+    context: "BOL7 Technologies",
+    tagline: "A multichannel AI sales and customer-engagement dashboard for businesses.",
+    summary:
+      "A sign-in-only client dashboard where businesses run customer messaging and marketing from one place. Accounts are created and verified with one-time passwords over email or WhatsApp, and the platform brings AI agents, a shared inbox, WhatsApp, SMS, RCS and email campaigns, bot flows, CRM and billing together.",
+    features: [
+      "Email or WhatsApp OTP sign-in",
+      "OTP-verified sign-up with country picker",
+      "reCAPTCHA-protected auth flows",
+      "Campaign, inbox and CRM modules",
+      "Client billing",
+    ],
+    stack: ["React", "Vite", "React Router", "Tailwind CSS", "React Flow", "Axios"],
+    accent: "#4f46e5",
+    note: "Client dashboard — the link opens the sign-in screen.",
+    images: {
+      desktop: "/work/bol7-billing-1280.webp",
+      desktopSmall: "/work/bol7-billing-640.webp",
+      mobile: "/work/bol7-billing-mobile.webp",
+    },
+  },
+  {
+    id: "ai-content-optimizer",
+    name: "AI Content Optimizer",
+    url: "https://ai-content-optimizer-six.vercel.app/",
+    kind: "web-app",
+    category: "AI web app",
+    tagline: "Scores short-form videos and images, then writes platform-ready captions and fixes.",
+    summary:
+      "Creators upload a video or image, choose Instagram, TikTok or YouTube along with a goal, niche, audience and language, and get back a report scoring the content from 1 to 100 across eight factors, including hook, pacing, audio and searchability. The report adds timeline-linked fixes, a platform safe-zone overlay, SEO captions and hashtags, and a side-by-side comparison with an edited revision.",
+    features: [
+      "Drag-and-drop video and image upload",
+      "8-factor creative quality scorecard",
+      "Platform safe-zone overlay",
+      "SEO captions and hashtag sets",
+      "Side-by-side revision comparison",
+    ],
+    stack: ["React", "Vite", "Custom CSS", "REST API"],
+    accent: "#6366f1",
+    images: {
+      desktop: "/work/ai-content-optimizer-1280.webp",
+      desktopSmall: "/work/ai-content-optimizer-640.webp",
+      mobile: "/work/ai-content-optimizer-mobile.webp",
+    },
+  },
+]
+
+export const liveSitesIntro = {
+  eyebrow: "Live work",
+  title: "Shipped, deployed and one click away",
+  lead:
+    "Real sites running in production — a storefront, an ordering platform, a booking site, a SaaS dashboard and an AI tool. Open any of them and use it the way a customer would.",
+}
+
+/**
  * Client-facing services. Ordered as the reader should meet them, not by strength:
  * websites is the offer the widest set of buyers self-identify with, so it leads.
  * The one marked `featured` gets a "Most requested" marker in its masthead rule —
@@ -313,6 +460,9 @@ export const services = [
  *
  * `icon` must be a real lucide-react export AND be present in the ICONS map in
  * WebsiteTypes.jsx, or it silently falls back to the default.
+ *
+ * `examples` lists `liveSites` ids that ARE this kind of site, so a sketch can link to a
+ * real, deployed one. Only list a site whose `kind` genuinely matches.
  */
 export const websiteTypes = [
   {
@@ -327,6 +477,7 @@ export const websiteTypes = [
   },
   {
     id: "online-shop",
+    examples: ["mobile-accessories"],
     name: "Online shop",
     icon: "ShoppingBag",
     preview: "product-grid",
@@ -347,6 +498,7 @@ export const websiteTypes = [
   },
   {
     id: "booking-site",
+    examples: ["saloon", "hotel-express"],
     name: "Booking and ordering site",
     icon: "ConciergeBell",
     preview: "menu-and-slots",
@@ -357,6 +509,7 @@ export const websiteTypes = [
   },
   {
     id: "customer-portal",
+    examples: ["omni-panel"],
     name: "Customer portal",
     icon: "PanelsTopLeft",
     preview: "portal-dashboard",
@@ -449,6 +602,7 @@ export const marqueeTech = [
  */
 export const navLinks = [
   { id: "about", label: "About" },
+  { id: "work", label: "Work" },
   { id: "services", label: "Services", href: "/services/", page: true },
   { id: "skills", label: "Skills" },
   { id: "experience", label: "Experience" },

@@ -1,0 +1,545 @@
+/* ==========================================================================
+   Website types (/services/ #website-types)                         layer: sections
+   Owned by the Services agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   The blueprint gallery: six specimens, each a miniature wireframe in a small
+   Tahoe window, with its label on bare ground underneath.
+
+     .wt-item        one type (a <li>; from 640px a subgrid of the list's rows)
+     .wt-specimen    the hue glow + .wt-window (FAUX glass: tint, rim, shadow)
+     .wf-stage       the OPAQUE sheet the drawing sits on (SiteMockup.jsx)
+     .wt-name …      the label: tile + name, blurb, "Best for", chips, live links
+
+   Backdrop cost: 0. Six windows share a viewport, so frost would blow the budget
+   of 8; the windows, chips and link capsules are all faux.
+
+   Why the sheet is opaque: it collapses every colour inside a drawing to one
+   known value per theme (a colour mixed against the paper, never an alpha
+   stack), and the drawing carries no text, so it needs no contrast measurement.
+   Why the drawing is grey with one hue: only the parts you would click or care
+   about (buttons, prices, the current nav item, chart data) carry the type's
+   hue. That single rule keeps an abstract sketch from reading as a loading
+   skeleton, and it is the hue of the type's icon tile, so tile and drawing read
+   as one object.
+   ========================================================================== */
+
+/* ---- Section tokens (scoped to the section root, per DESIGN.md §3.6) ---------- */
+.wt {
+  --wf-paper: #fbfcfe;
+  --wf-ink-1: color-mix(in oklab, var(--fg) 9%, var(--wf-paper));
+  --wf-ink-2: color-mix(in oklab, var(--fg) 17%, var(--wf-paper));
+  --wf-ink-3: color-mix(in oklab, var(--fg) 30%, var(--wf-paper));
+  --wf-edge: color-mix(in oklab, var(--fg) 11%, var(--wf-paper));
+  --wf-panel: color-mix(in oklab, var(--fg) 3%, var(--wf-paper));
+
+  --wt-pad: 7px; /* frame around the sheet */
+  --wt-bar: 30px; /* title strip */
+  --wt-light: 9px; /* traffic-light diameter */
+  --wt-sheet-ring: rgb(20 36 72 / 0.13);
+  --wt-drop: rgb(30 52 110 / 0.3);
+  --wt-glow: 52%;
+
+  /* Caption body tone: part-way from --fg-muted to --fg. The captions sit on bare
+     wallpaper, and just under the header, where the fixed wallpaper's sky field and
+     wave crest are brightest, plain --fg-muted measured 4.54:1: a pass with no
+     margin. This keeps the step down from the names and holds 5.5:1+ there. It is
+     built from the tokens, so it becomes --fg under prefers-contrast: more. */
+  --wt-body: color-mix(in oklab, var(--fg) 45%, var(--fg-muted));
+}
+.dark .wt {
+  --wf-paper: #0f1424;
+  --wf-ink-1: color-mix(in oklab, var(--fg) 11%, var(--wf-paper));
+  --wf-ink-2: color-mix(in oklab, var(--fg) 20%, var(--wf-paper));
+  --wf-ink-3: color-mix(in oklab, var(--fg) 34%, var(--wf-paper));
+  --wf-edge: color-mix(in oklab, var(--fg) 13%, var(--wf-paper));
+  --wf-panel: color-mix(in oklab, var(--fg) 4%, var(--wf-paper));
+
+  --wt-sheet-ring: rgb(255 255 255 / 0.12);
+  --wt-drop: rgb(0 0 0 / 0.8);
+  --wt-glow: 44%;
+}
+@media (max-width: 640px) {
+  .wt {
+    --wt-pad: 6px;
+    --wt-bar: 26px;
+    --wt-light: 8px;
+  }
+}
+
+/* ---- The gallery ------------------------------------------------------------- */
+.wt-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: clamp(20px, 2.4vw, 32px);
+  row-gap: 64px;
+}
+@media (min-width: 640px) {
+  .wt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .wt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.wt-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* From 640px every item spans six rows of the list and adopts them as its own
+   (subgrid), so each part of a label sits on the same line as its neighbours'.
+   The gap between rows of items is padding on the item: a subgrid absorbs the
+   parent's row-gap into its tracks, which would space out the label instead. The
+   last row's padding is handed back by the list's negative margin. */
+@supports (grid-template-rows: subgrid) {
+  @media (min-width: 640px) {
+    .wt-grid {
+      row-gap: 0;
+      margin-bottom: -72px;
+    }
+    .wt-item {
+      display: grid;
+      grid-row: span 6;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+      align-content: start;
+      padding-bottom: 72px;
+    }
+  }
+}
+
+/* ---- The specimen --------------------------------------------------------------- */
+.wt-specimen {
+  position: relative;
+  isolation: isolate; /* keeps the glow's z-index:-1 inside the specimen */
+}
+/* The type's hue, pooled softly behind its window. The frame is translucent faux
+   glass, so it picks the colour up at its rim, as a Work window does its site's. */
+.wt-specimen::before {
+  content: "";
+  position: absolute;
+  inset: -12% -11% -4%;
+  z-index: -1;
+  /* closest-side: fully transparent at the box edge, so the glow has no seam. */
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--wt-hue) var(--wt-glow), transparent) 55%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.wt-window {
+  padding: 0 var(--wt-pad) var(--wt-pad);
+  border-radius: var(--r-card);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-rim-soft),
+    0 0 0 0.5px var(--glass-edge),
+    0 2px 6px rgb(0 0 0 / 0.05),
+    0 34px 64px -34px var(--wt-drop);
+}
+.wt-window__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--wt-bar);
+  padding-inline: calc(var(--wt-pad) + 4px);
+}
+/* Neutral lights, as on a window that is not in focus: the colour on this page
+   belongs to the drawings. */
+.wt-window__lights {
+  display: flex;
+  gap: calc(var(--wt-light) * 0.62);
+}
+.wt-window__lights i {
+  width: var(--wt-light);
+  height: var(--wt-light);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--fg) 20%, transparent);
+  box-shadow: inset 0 0 0 0.5px color-mix(in oklab, var(--fg) 14%, transparent);
+}
+.wt-window__address {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 38%;
+  height: calc(var(--wt-bar) * 0.5);
+  border-radius: var(--r-pill);
+  background: color-mix(in oklab, var(--fg) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fg) 7%, transparent);
+}
+
+/* The sheet: aspect-ratio + container-type means the drawing scales as a unit
+   instead of reflowing, so there are no internal breakpoints; the px floor in
+   each max() is what keeps 360px readable rather than merely survivable. */
+.wf-stage {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: calc(var(--r-card) - var(--wt-pad));
+  background: var(--wf-paper);
+  box-shadow: 0 0 0 1px var(--wt-sheet-ring);
+}
+.wf-sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: max(3px, 1.5cqw);
+  padding: max(7px, 3.4cqw);
+}
+
+/* ---- Wireframe primitives ------------------------------------------------------- */
+.wf-row { display: flex; align-items: center; gap: max(3px, 1.6cqw); }
+.wf-col { display: flex; flex-direction: column; gap: max(3px, 1.5cqw); }
+.wf-grow { flex: 1; min-width: 0; }
+
+.wf-bar {
+  height: max(2px, 1.15cqw);
+  border-radius: var(--r-pill);
+  background: var(--wf-ink-2);
+}
+.wf-bar--faint { background: var(--wf-ink-1); }
+.wf-bar--strong { background: var(--wf-ink-3); height: max(3px, 1.9cqw); }
+.wf-bar--accent { background: color-mix(in oklab, var(--wt-hue) 78%, var(--wf-paper)); }
+
+.wf-block {
+  border-radius: max(2px, 1cqw);
+  background: var(--wf-ink-1);
+  border: 1px solid var(--wf-edge);
+}
+
+/* The one element that says "a picture goes here". Used only where an image IS
+   the point (a shop tile, a portfolio mosaic): repeating it everywhere would make
+   "the ones with pictures" read as one group. */
+.wf-media {
+  position: relative;
+  border-radius: max(2px, 1.2cqw);
+  background: var(--wf-ink-1);
+  border: 1px solid var(--wf-edge);
+  overflow: hidden;
+}
+.wf-media::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 18%;
+  height: 42%;
+  background: var(--wf-ink-2);
+  clip-path: polygon(0 100%, 30% 34%, 52% 100%, 66% 58%, 100% 100%);
+}
+/* The portfolio's lead picture carries the hue: the work is the thing to look at. */
+.wf-media--hero { background: color-mix(in oklab, var(--wt-hue) 16%, var(--wf-paper)); }
+.wf-media--hero::after { background: color-mix(in oklab, var(--wt-hue) 46%, var(--wf-paper)); }
+
+.wf-btn {
+  border-radius: var(--r-pill);
+  background: var(--wt-hue);
+  height: max(5px, 3.4cqw);
+}
+.wf-chip {
+  border-radius: var(--r-pill);
+  background: var(--wf-ink-2);
+  height: max(4px, 2.4cqw);
+}
+.wf-chip--on { background: color-mix(in oklab, var(--wt-hue) 84%, var(--wf-paper)); }
+/* A slot someone else has booked: an outline, not a fill. */
+.wf-chip--taken { background: transparent; box-shadow: inset 0 0 0 1px var(--wf-edge); }
+
+.wf-dot {
+  flex: none;
+  border-radius: 50%;
+  background: var(--wf-ink-2);
+  height: max(3px, 1.8cqw);
+  width: max(3px, 1.8cqw);
+}
+.wf-dot--on { background: var(--wt-hue); }
+
+.wf-rule { height: 1px; background: var(--wf-edge); }
+
+.wf-panel {
+  border-radius: max(2px, 1.4cqw);
+  border: 1px solid var(--wf-edge);
+  background: var(--wf-panel);
+  padding: max(4px, 2.2cqw);
+}
+
+/* The business banner: a neutral band that holds the headline, so the page reads
+   as nav / banner / three cards instead of a headline floating in white space. */
+.wf-hero {
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: max(2px, 1.4cqw);
+  border: 1px solid var(--wf-edge);
+  background: var(--wf-panel);
+}
+
+.wf-search {
+  height: max(5px, 3cqw);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--wf-edge);
+  background: var(--wf-panel);
+}
+/* A bag with a count badge: the badge is the one "something is in here" mark. */
+.wf-cart {
+  position: relative;
+  flex: none;
+  width: max(6px, 3.4cqw);
+  height: max(6px, 3.4cqw);
+  border-radius: max(1px, 0.8cqw);
+  border: 1px solid var(--wf-ink-3);
+}
+.wf-cart::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -45%;
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  background: var(--wt-hue);
+}
+.wf-tiles {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: max(4px, 2cqw) max(3px, 1.8cqw);
+}
+.wf-tiles > .wf-col { min-height: 0; gap: max(2px, 1.1cqw); }
+.wf-tiles .wf-media { min-height: max(8px, 5cqw); }
+
+/* The landing page's one job: an email field joined to its button. */
+.wf-form {
+  display: flex;
+  gap: max(2px, 0.8cqw);
+  height: max(8px, 5.2cqw);
+  padding: max(1px, 0.6cqw);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--wf-edge);
+  background: var(--wf-panel);
+}
+.wf-form__field { flex: 1; }
+.wf-form__btn { flex: none; width: 36%; height: auto; }
+/* The slots spread through whatever height the picker has left, so the picker
+   reads as a full column of times rather than a few pills over empty space. */
+.wf-slots {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: space-evenly;
+  gap: max(2px, 1.5cqw);
+}
+.wf-slots > .wf-chip { height: max(4px, 3.3cqw); }
+/* A week strip: small rounded day cells, the chosen one in the hue. */
+.wf-days {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: max(2px, 1cqw);
+}
+.wf-day {
+  aspect-ratio: 1;
+  border-radius: max(2px, 1cqw);
+  background: var(--wf-ink-1);
+  box-shadow: inset 0 0 0 1px var(--wf-edge);
+}
+.wf-day--on {
+  background: color-mix(in oklab, var(--wt-hue) 22%, var(--wf-paper));
+  box-shadow: inset 0 0 0 1px var(--wt-hue);
+}
+.wf-mosaic {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: max(3px, 1.8cqw);
+  flex: 1;
+  margin-top: max(2px, 1cqw);
+}
+.wf-side {
+  padding-right: max(3px, 1.6cqw);
+  box-shadow: 1px 0 0 var(--wf-edge);
+}
+
+/* Bars of a chart. Only the data carries the hue: it is the thing the customer
+   of a portal actually looks at. */
+.wf-chart { display: flex; align-items: flex-end; gap: max(2px, 1.4cqw); }
+.wf-chart > i {
+  flex: 1;
+  border-radius: max(1px, 0.5cqw) max(1px, 0.5cqw) 0 0;
+  background: color-mix(in oklab, var(--wt-hue) 50%, var(--wf-paper));
+}
+.wf-chart > i:last-child { background: var(--wt-hue); }
+
+/* ---- The assembly ------------------------------------------------------------------
+   from-only keyframes: the implicit `to` is the element's own computed style, so
+   the ASSEMBLED state is the resting state structurally rather than by convention.
+   A card can never strand half-built, and because the global reduced-motion block
+   zeroes delay as well as duration, a reduced-motion visitor gets the finished
+   drawing with no separate fallback.
+
+   The 380ms floor lets the item's own reveal (opacity + lift, --dur-reveal) get
+   under way first, so the parts do not assemble inside a still-invisible box. */
+@keyframes wf-rise { from { opacity: 0; transform: translateY(max(3px, 2cqw)); } }
+@keyframes wf-draw { from { opacity: 0; transform: scaleX(0.15); } }
+
+.reveal.is-visible .wf-anim {
+  animation: wf-rise 0.5s var(--ease-out) backwards;
+  animation-delay: calc(380ms + var(--reveal-delay, 0ms) + var(--i, 0) * 55ms);
+}
+.reveal.is-visible .wf-anim--draw {
+  animation-name: wf-draw;
+  /* transform-origin is NOT inherited, so it sits on the animated element itself,
+     or every bar would scale from its centre. */
+  transform-origin: left center;
+}
+
+/* ---- The label, on bare ground ------------------------------------------------------ */
+.wt-name {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.024em;
+}
+.wt-name__tile {
+  --tile: var(--wt-hue);
+  --tile-size: 34px;
+}
+.wt-blurb {
+  margin-top: 12px;
+  font-size: var(--text-subhead);
+  line-height: 1.6;
+  color: var(--wt-body);
+}
+.wt-label {
+  display: block;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--wt-body);
+}
+.wt-best {
+  margin-top: 18px;
+  padding-top: 16px;
+  box-shadow: 0 -1px 0 var(--hairline);
+}
+.wt-best__text {
+  display: block;
+  margin-top: 6px;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.wt-marks {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+}
+/* The chip's default plate (--inset) is made for the inside of a card. On bare
+   wallpaper it let a bright wave crest through (3.96:1 at 390 dark), so these
+   chips carry the faux-glass tint instead. It reads the --glass-a token, so solid
+   mode still reaches it. */
+.wt-marks .chip { background: rgb(var(--glass-tint) / var(--glass-a)); }
+
+/* ---- Live example links: faux capsules, the site's own colour as a dot ------------- */
+.wt-live { margin-top: 20px; }
+.wt-live__list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wt-live__link {
+  gap: 9px;
+  max-width: 100%;
+  padding-inline: 14px 13px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.wt-live__dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--site);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--site) 22%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+.wt-live__arrow {
+  color: var(--fg-muted);
+  transition: transform var(--dur-gel) var(--ease-gel), color 0.2s;
+}
+/* The caveat under the links: footnote size, the caption body tone. */
+.wt-live__notes { margin-top: 10px; display: grid; gap: 4px; }
+.wt-live__note {
+  font-size: var(--text-footnote);
+  line-height: 1.5;
+  color: var(--wt-body);
+  max-width: 34em;
+}
+.wt-live__note-site { font-weight: 600; color: var(--fg); }
+@media (hover: hover) {
+  .wt-live__link:hover .wt-live__arrow {
+    color: var(--accent-ink);
+    transform: translate(1px, -1px);
+  }
+}
+
+/* ---- Phones ------------------------------------------------------------------------ */
+@media (max-width: 639px) {
+  .wt-grid { row-gap: 56px; }
+  .wt-name { margin-top: 18px; font-size: 18px; }
+  .wt-name__tile { --tile-size: 32px; }
+}
+
+/* ---- Modes ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .wt-live__link:hover .wt-live__arrow { transform: none; }
+}
+/* Forced colours drop authored backgrounds, which would blank the drawings. Keep them,
+   redrawn in system colours: paper is Canvas, ink is GrayText, the hue is Highlight. */
+@media (forced-colors: active) {
+  .wf-stage {
+    forced-color-adjust: none;
+    --wf-paper: Canvas;
+    --wf-ink-1: GrayText;
+    --wf-ink-2: GrayText;
+    --wf-ink-3: CanvasText;
+    --wf-edge: GrayText;
+    --wf-panel: Canvas;
+    --wt-hue: Highlight;
+    border: 1px solid CanvasText;
+  }
+  /* A picture is an outlined Canvas box with a GrayText glyph: filled with GrayText
+     it would swallow its own glyph. */
+  .wf-stage :is(.wf-media, .wf-block, .wf-day) { background: Canvas; }
+  .wf-stage .wf-media::after { background: GrayText; }
+  .wt-specimen::before { display: none; }
+  .wt-window__address { border: 1px solid CanvasText; }
+}

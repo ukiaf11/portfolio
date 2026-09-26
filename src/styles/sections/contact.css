@@ -1,0 +1,248 @@
+/* ==========================================================================
+   Contact (#contact)                                                  layer: sections
+   Owned by the Contact agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   The closing call to action: one frosted bento panel on the wallpaper.
+     .contact-pitch   eyebrow, headline, copy, the two actions
+     .contact-card    the contact details: one faux capsule row per channel
+   ≥1024px the two cells sit side by side (7fr / 5fr, like the section head),
+   below that they stack, divided by the bento hairline.
+   Budget: 1 frost surface (the panel). Rows, eyebrow and buttons are faux.
+   ========================================================================== */
+
+/* Section tokens, scoped to the section root. The glow is decoration behind the
+   glass; its alphas were tuned so body copy on the panel stays above 4.5:1. */
+.contact {
+  --contact-glow-1: rgb(var(--accent-rgb) / 0.42);
+  --contact-glow-2: rgb(var(--wp-lilac) / 0.34);
+  --contact-row-h: 64px;
+  --contact-row-pad: 10px; /* tile inset: circle radius 22 = capsule radius 32 - 10 */
+}
+.dark .contact {
+  --contact-glow-1: rgb(var(--accent-rgb) / 0.66);
+  --contact-glow-2: rgb(var(--wp-lilac) / 0.38);
+}
+
+.contact__stage {
+  position: relative;
+}
+
+/* ---- The glow behind the glass ------------------------------------------------ */
+/* Two soft pools, each a closest-side gradient in its own box, so they always fall
+   to zero inside that box and never leave a hard edge. */
+.contact__glow {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+.contact__glow::before,
+.contact__glow::after {
+  content: "";
+  position: absolute;
+}
+.contact__glow::before {
+  left: -8%;
+  top: -22%;
+  width: 66%;
+  height: 112%;
+  background: radial-gradient(closest-side, var(--contact-glow-1), transparent);
+}
+.contact__glow::after {
+  right: -6%;
+  bottom: -24%;
+  width: 52%;
+  height: 104%;
+  background: radial-gradient(closest-side, var(--contact-glow-2), transparent);
+}
+@media (forced-colors: active) {
+  .contact__glow { display: none; }
+}
+
+/* ---- The panel ------------------------------------------------------------------ */
+.contact-panel {
+  z-index: 1; /* above the glow it samples (.glass is already position: relative) */
+}
+.contact-panel__grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1024px) {
+  .contact-panel__grid {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}
+
+/* ---- The pitch ------------------------------------------------------------------- */
+.contact-pitch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 28px 22px 30px;
+}
+@media (min-width: 640px) {
+  .contact-pitch { padding: 48px 44px; }
+}
+@media (min-width: 1024px) {
+  .contact-pitch { padding: 64px 56px; }
+}
+.contact-pitch__title {
+  margin-top: 22px;
+  font-size: clamp(2.3rem, 5.2vw, 4.1rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--track-title);
+}
+.contact-pitch__title > span { display: block; }
+/* The hero name's quiet fall-off, echoed on the page's last headline. */
+.contact-pitch__title-2 {
+  padding-bottom: 0.08em;
+  background: linear-gradient(
+    176deg,
+    var(--fg) 12%,
+    color-mix(in oklab, var(--fg) 58%, var(--accent-ink)) 96%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .contact-pitch__title-2 { color: CanvasText; background: none; }
+}
+.contact-pitch__copy {
+  margin-top: 18px;
+  max-width: 34rem;
+  font-size: var(--text-lead);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+}
+.contact-pitch__actions {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .contact-pitch__actions { margin-top: 36px; }
+}
+@media (max-width: 480px) {
+  .contact-pitch__actions { width: 100%; flex-direction: column; gap: 10px; }
+  .contact-pitch__actions > .btn { width: 100%; }
+}
+
+/* ---- The contact details ----------------------------------------------------------- */
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 16px 20px;
+}
+@media (min-width: 640px) {
+  .contact-card { padding: 30px 36px 36px; }
+}
+@media (min-width: 1024px) {
+  .contact-card { gap: 16px; padding: 48px 40px; }
+}
+/* A grouped-list caption, as in About's "Focus" list; it starts where the tiles do. */
+.contact-card__title {
+  padding-inline: calc(var(--contact-row-pad) + 1px);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* ---- Channel rows: faux capsules with a round icon tile ---------------------------- */
+.contact-channels {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .contact-channels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.contact-channels > li { display: grid; min-width: 0; }
+
+.contact-channel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  min-height: var(--contact-row-h);
+  padding: 9px 20px 9px var(--contact-row-pad);
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  color: var(--fg);
+  text-decoration: none;
+}
+/* In a capsule the tile is a circle (a pill on a square), so the corners stay concentric. */
+.contact-channel__tile {
+  --tile-size: 44px;
+  border-radius: var(--r-pill);
+}
+.contact-channel__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.contact-channel__label {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--fg-muted);
+}
+.contact-channel__value {
+  margin-top: 1px;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.014em;
+  overflow-wrap: anywhere;
+}
+.contact-channel__go {
+  flex: none;
+  color: var(--fg-subtle);
+  transition:
+    transform var(--dur-gel) var(--ease-gel),
+    color var(--dur-gel) ease;
+}
+/* The one static row (location) is recessed, not raised: an inset plate with no
+   sheen, shadow or arrow, so it never reads as something to press. */
+.contact-channel--static {
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--inset-ring);
+}
+
+/* A wide row barely needs to grow; the system's 1.03 would jump ~12px. */
+@media (hover: hover) {
+  .contact-channel.glass-interactive:hover { transform: scale(1.012); }
+  .contact-channel:hover .contact-channel__go {
+    color: var(--accent-ink);
+    transform: translate(2px, -2px);
+  }
+}
+.contact-channel.glass-interactive:active { transform: scale(0.985); }
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-channel.glass-interactive:hover,
+  .contact-channel.glass-interactive:active,
+  .contact-channel:hover .contact-channel__go {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .contact-channel { border-color: CanvasText; }
+  .contact-channel__go { color: LinkText; }
+}
