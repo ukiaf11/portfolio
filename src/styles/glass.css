@@ -1,0 +1,329 @@
+/* ==========================================================================
+   Tahoe Clear · Liquid Glass material                         layer: glass
+   --------------------------------------------------------------------------
+   Tiers (use <LiquidGlass tier> or these classes; see DESIGN.md)
+     .glass              faux: tint + specular rim + sheen, NO backdrop-filter.
+                         Chips, tiles, list insets, anything inside another glass.
+     .glass-frost        + real backdrop blur, every engine. Content-layer panels.
+     .glass-refract      frost everywhere; Chromium upgrades it to SVG refraction
+                         from JS (LiquidGlass.jsx) while html[data-glass="refract"].
+   Variants
+     .glass-strong       higher tint: sheets and cards over busy content.
+     .glass-legible      frost for text panels overlapping screenshots: higher
+                         tint plus a literal contrast(.7) in the backdrop.
+     .glass-prominent    accent-tinted glass, the one primary action.
+     .glass-clear        Apple "clear" variant: over media only.
+     .glass-clear.glass-dim   + the HIG 35% dimming layer.
+     .glass-capsule      pill shape, rim light from straight above.
+   Modes on <html data-glass>: refract | frost | solid (set before first paint).
+
+   Rules that keep this honest
+   - backdrop-filter is written ONLY in this file (and legacy.css until it is
+     deleted), always with LITERAL values: WebKit bugs 297620 / 289800 drop a
+     -webkit-backdrop-filter that is fed from var().
+   - url() never appears here. Safari and Firefox discard the whole declaration
+     (blur included) when it contains url(); refraction is an inline style.
+   - A backdrop-filter surface never sits inside another one. There is no
+     safety net that hides a violation: qa/audit.mjs reports it as "nested".
+   ========================================================================== */
+
+/* ---- Tier 0: faux ------------------------------------------------------- */
+.glass {
+  position: relative;
+  isolation: isolate; /* lets ::after sit at z-index:-1; not a backdrop root */
+  color: var(--glass-fg);
+  border: 1px solid transparent; /* becomes the visible edge in forced-colors */
+  background-color: rgb(var(--glass-tint) / var(--glass-a));
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-rim-soft),
+    0 0 0 0.5px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+/* Specular rim: a 1px ring. A faint base all the way round, a hot spot where
+   the light lands (top-left) and a softer counter-highlight (bottom-right). */
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      var(--glass-light, 135deg),
+      var(--glass-rim) 0%,
+      transparent 34%,
+      transparent 66%,
+      var(--glass-rim-soft) 100%
+    ),
+    linear-gradient(var(--glass-rim-base), var(--glass-rim-base));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* Sheen: light pooled under the top edge; follows the pointer via --mx/--my. */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 80% at var(--mx, 28%) var(--my, -12%),
+    var(--glass-sheen),
+    transparent 62%
+  );
+  transition: background-position 0.2s;
+}
+
+/* Capsules: pill-shaped, lit from straight above. */
+.glass-capsule {
+  --glass-light: 180deg;
+  border-radius: var(--r-pill);
+}
+
+/* ---- Tier 1: frosted (literal values) ----------------------------------- */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass-frost,
+  .glass-refract {
+    background-color: rgb(var(--glass-tint) / var(--glass-a-frost));
+    -webkit-backdrop-filter: blur(22px) saturate(180%) brightness(1.06);
+    backdrop-filter: blur(22px) saturate(180%) brightness(1.06);
+  }
+  .dark .glass-frost,
+  .dark .glass-refract {
+    -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(0.82);
+    backdrop-filter: blur(22px) saturate(160%) brightness(0.82);
+  }
+
+  /* Legible: text panels that overlap arbitrary screenshots. contrast(.7) pulls
+     the backdrop toward mid-grey BEFORE the tint goes on, so a black screenshot
+     cannot drag a light panel into a grey smear and a white one cannot wash out
+     a dark panel. */
+  .glass-frost.glass-legible {
+    -webkit-backdrop-filter: blur(24px) saturate(150%) contrast(0.7) brightness(1.15);
+    backdrop-filter: blur(24px) saturate(150%) contrast(0.7) brightness(1.15);
+  }
+  .dark .glass-frost.glass-legible {
+    -webkit-backdrop-filter: blur(24px) saturate(130%) contrast(0.7) brightness(0.7);
+    backdrop-filter: blur(24px) saturate(130%) contrast(0.7) brightness(0.7);
+  }
+
+  /* Apple "clear": highly translucent, only ever over screenshots. */
+  .glass-clear {
+    background-color: rgb(var(--glass-tint) / var(--glass-a-clear));
+    -webkit-backdrop-filter: blur(6px) saturate(170%);
+    backdrop-filter: blur(6px) saturate(170%);
+  }
+  /* HIG: a 35% dark dimming layer when clear glass sits on bright media. The
+     brightness() in the filter is the glass's own luminosity adjustment; with
+     the dim on top, white text holds 4.5:1 even over a pure white page. */
+  .glass-clear.glass-dim {
+    background-color: rgb(0 0 0 / 0.35);
+    color: #fff;
+    -webkit-backdrop-filter: blur(6px) saturate(160%) brightness(0.62);
+    backdrop-filter: blur(6px) saturate(160%) brightness(0.62);
+  }
+
+  /* Phones and coarse pointers: smaller kernel, same look. */
+  @media (pointer: coarse), (max-width: 640px) {
+    .glass-frost,
+    .glass-refract {
+      -webkit-backdrop-filter: blur(16px) saturate(175%) brightness(1.05);
+      backdrop-filter: blur(16px) saturate(175%) brightness(1.05);
+    }
+    .dark .glass-frost,
+    .dark .glass-refract {
+      -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(0.82);
+      backdrop-filter: blur(16px) saturate(150%) brightness(0.82);
+    }
+    .glass-frost.glass-legible {
+      -webkit-backdrop-filter: blur(18px) saturate(150%) contrast(0.7) brightness(1.15);
+      backdrop-filter: blur(18px) saturate(150%) contrast(0.7) brightness(1.15);
+    }
+    .dark .glass-frost.glass-legible {
+      -webkit-backdrop-filter: blur(18px) saturate(130%) contrast(0.7) brightness(0.7);
+      backdrop-filter: blur(18px) saturate(130%) contrast(0.7) brightness(0.7);
+    }
+  }
+}
+
+/* Variants are alpha swaps, so solid mode (below) overrides them for free. */
+.glass-strong {
+  --glass-a: var(--glass-a-strong);
+  --glass-a-frost: var(--glass-a-strong);
+}
+.glass-legible {
+  --glass-a: var(--glass-a-legible);
+  --glass-a-frost: var(--glass-a-legible);
+}
+
+/* ---- Tier 2: refraction -------------------------------------------------- */
+html[data-glass="refract"] .glass-refract.is-refracting {
+  background-color: rgb(var(--glass-tint) / var(--glass-a-refract));
+}
+/* Capsules: the tint thins out toward the top and bottom rims, where the lens bends
+   hardest and no text sits, and stays at full strength across the label band, so the
+   refraction reads without spending any of the text's contrast budget. */
+html[data-glass="refract"] .glass-refract.is-refracting.glass-capsule {
+  background-color: transparent;
+  background-image: linear-gradient(
+    to bottom,
+    rgb(var(--glass-tint) / var(--glass-a-rimzone)) 0%,
+    rgb(var(--glass-tint) / var(--glass-a-refract)) 32%,
+    rgb(var(--glass-tint) / var(--glass-a-refract)) 68%,
+    rgb(var(--glass-tint) / var(--glass-a-rimzone)) 100%
+  );
+}
+
+/* ---- Prominent: accent-tinted glass (iOS 26 glassProminent) ------------- */
+.glass-prominent {
+  --glass-tint: var(--accent-rgb);
+  --glass-a: 0.94;
+  --glass-a-frost: 0.92;
+  --glass-a-refract: 0.88;
+  --glass-a-rimzone: 0.7;
+  --glass-a-strong: 0.94;
+  --glass-a-legible: 0.94;
+  --glass-rim: rgb(255 255 255 / 0.85);
+  --glass-rim-soft: rgb(255 255 255 / 0.4);
+  --glass-rim-base: rgb(255 255 255 / 0.18);
+  --glass-edge: rgb(0 30 90 / 0.3);
+  --glass-sheen: rgb(255 255 255 / 0.32);
+  --glass-shadow: 0 1px 2px rgb(0 30 90 / 0.2), 0 12px 26px -10px rgb(var(--accent-rgb) / 0.7);
+  --glass-fg: var(--on-accent);
+  color: var(--on-accent);
+}
+
+/* ---- Interaction: gel press. Transform only (compositor). ----------------- */
+.glass-interactive {
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+@media (hover: hover) {
+  .glass-interactive:hover {
+    transform: scale(1.03);
+  }
+}
+.glass-interactive:active {
+  transform: scale(0.96);
+  transition-duration: var(--dur-press);
+}
+
+/* ---- Focus: two-tone ring, readable on any backdrop ----------------------- */
+.glass:focus-visible,
+.glass :focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--focus-halo);
+}
+
+/* ==========================================================================
+   Accessibility modes
+   Solid = a token swap (every surface reads the same alpha tokens, legacy
+   ones included) plus no backdrop-filter anywhere. The !important beats the
+   inline url() refraction; it is scoped to solid mode only.
+   ========================================================================== */
+html[data-glass="solid"] {
+  --glass-a: var(--glass-a-solid);
+  --glass-a-frost: var(--glass-a-solid);
+  --glass-a-strong: var(--glass-a-solid);
+  --glass-a-legible: var(--glass-a-solid);
+  --glass-a-refract: var(--glass-a-solid);
+  --glass-a-rimzone: var(--glass-a-solid);
+  --glass-a-clear: 0.9;
+  --card: rgb(var(--glass-tint) / var(--glass-a-solid));
+}
+html[data-glass="solid"] *,
+html[data-glass="solid"] *::before,
+html[data-glass="solid"] *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html[data-glass="solid"] .glass-clear.glass-dim {
+  background-color: rgb(12 14 20 / 0.9);
+}
+
+/* The same, straight from the OS, in case JS never ran. */
+@media (prefers-reduced-transparency: reduce) {
+  html:root {
+    --glass-a: var(--glass-a-solid);
+    --glass-a-frost: var(--glass-a-solid);
+    --glass-a-strong: var(--glass-a-solid);
+    --glass-a-legible: var(--glass-a-solid);
+    --glass-a-refract: var(--glass-a-solid);
+    --glass-a-rimzone: var(--glass-a-solid);
+    --card: rgb(var(--glass-tint) / var(--glass-a-solid));
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .glass-clear.glass-dim {
+    background-color: rgb(12 14 20 / 0.9);
+  }
+}
+
+@media (prefers-contrast: more) {
+  html:root {
+    --glass-a: var(--glass-a-solid);
+    --glass-a-frost: var(--glass-a-solid);
+    --glass-a-strong: var(--glass-a-solid);
+    --glass-a-legible: var(--glass-a-solid);
+    --glass-a-refract: var(--glass-a-solid);
+    --glass-a-rimzone: var(--glass-a-solid);
+    --card: rgb(var(--glass-tint) / var(--glass-a-solid));
+    /* Muted and subtle text go to full strength. */
+    --fg-muted: var(--fg);
+    --fg-subtle: var(--fg);
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .glass {
+    border-color: color-mix(in srgb, var(--glass-fg) 55%, transparent);
+  }
+  .glass::after {
+    display: none;
+  }
+  .glass-clear.glass-dim {
+    background-color: rgb(0 0 0 / 0.9);
+  }
+}
+
+@media (forced-colors: active) {
+  .glass,
+  .glass-clear {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+  .glass::before,
+  .glass::after {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-interactive,
+  .glass-interactive:hover,
+  .glass-interactive:active {
+    transition: none;
+    transform: none;
+  }
+}

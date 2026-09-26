@@ -1,0 +1,645 @@
+/* ==========================================================================
+   Services page: the page header (.svc-hero), the Services lattice and the
+   closing CTA card (#services, .svc)                            layer: sections
+   Owned by the Services agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Glass here, all frost, no refract (the page's refract budget is the nav):
+     .svc-live    the live-sites widget in the page header
+     .svc-plate   ONE bento plate holding all four services
+     .svc-cta     the closing call to action
+   Everything inside them is faux: insets, chips, tiles and the buttons.
+   ========================================================================== */
+
+/* ---- Section tokens: the pointer light under the plate ------------------------
+   The light's own colours stay high-luminance in both themes (a light, not an
+   ink). --svc-light is its strength, tuned against measured contrast of the body
+   copy with the light directly behind it: the light theme's frost is bright and
+   hides most of it, the dark theme's frost is dark and shows all of it.          */
+.svc {
+  --svc-glow-a: rgb(176 206 255);
+  --svc-glow-b: rgb(168 236 226);
+  --svc-light: 0.85;
+}
+.dark .svc {
+  --svc-glow-a: rgb(122 162 255);
+  --svc-glow-b: rgb(72 206 196);
+  --svc-light: 0.27;
+}
+
+/* The accent in both headings: the two ends of the accent ramp (lib/accent.js),
+   blue ink to teal ink, as one quiet gradient. Both ends are inks (tuned for
+   text), so the gradient holds contrast wherever it lands. */
+.svc-accent-text {
+  padding-bottom: 0.08em;
+  background: linear-gradient(
+    100deg,
+    var(--accent-ink) 8%,
+    color-mix(in oklab, var(--sys-teal) 62%, var(--fg)) 96%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .svc-accent-text { color: CanvasText; background: none; }
+}
+
+/* ==========================================================================
+   Page header
+   The same container as every section (--page-max, 20/32px gutters). From
+   1024px: copy on the left, the live-sites widget on the right.
+   ========================================================================== */
+.svc-hero {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: 96px 20px 0;
+}
+@media (min-width: 640px) {
+  .svc-hero { padding: 132px 32px 0; }
+}
+@media (min-width: 1024px) {
+  .svc-hero { padding-top: 148px; }
+}
+.svc-hero__grid {
+  display: grid;
+  gap: 36px;
+}
+@media (min-width: 1024px) {
+  .svc-hero__grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    gap: 64px;
+    align-items: center;
+  }
+}
+
+.svc-hero__back {
+  gap: 7px;
+  padding-inline: 13px 17px;
+  font-size: 14px;
+  color: var(--fg);
+}
+.svc-hero__back svg {
+  color: var(--accent-ink);
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+@media (hover: hover) {
+  .svc-hero__back:hover svg { transform: translateX(-2px); }
+}
+
+.svc-hero__title {
+  margin-top: 26px;
+  font-size: clamp(2.55rem, 5.2vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-optical-sizing: auto;
+}
+@media (min-width: 640px) {
+  .svc-hero__title { margin-top: 30px; }
+}
+.svc-hero__intro {
+  margin-top: 20px;
+  max-width: 38rem;
+  font-size: var(--text-lead);
+  line-height: 1.58;
+  letter-spacing: -0.012em;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .svc-hero__intro { margin-top: 24px; }
+}
+.svc-hero__actions {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .svc-hero__actions { margin-top: 32px; }
+}
+@media (max-width: 480px) {
+  .svc-hero__actions { gap: 10px; }
+  .svc-hero__actions > .btn { flex: 1 1 auto; }
+}
+
+/* ---- The live-sites widget: a Settings-style grouped list of links ------------ */
+.svc-live {
+  padding: 8px;
+  border-radius: var(--r-panel);
+}
+@media (min-width: 640px) {
+  .svc-live { padding: 10px; }
+}
+.svc-live__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 12px 10px;
+}
+.svc-live__title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.svc-live__count {
+  margin-left: auto;
+  min-height: 26px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+}
+/* Concentric: widget 32 minus padding 8/10. The clip keeps the row highlight
+   inside the corners (overflow is not a backdrop root; nothing inside is glass). */
+.svc-live__list {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  overflow: hidden;
+  border-radius: calc(var(--r-panel) - 8px);
+}
+@media (min-width: 640px) {
+  .svc-live__list { border-radius: var(--r-nested); }
+}
+.svc-live__list li { position: relative; }
+.svc-live__list li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 56px; /* inset separator: starts at the text, not the tile */
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+.svc-live__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 7px 16px;
+  color: var(--fg);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.svc-live__link:focus-visible {
+  outline-offset: -3px;
+  border-radius: var(--r-tile);
+}
+.svc-live__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.svc-live__name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+}
+.svc-live__cat {
+  font-size: var(--text-footnote);
+  line-height: 1.35;
+  color: var(--fg-muted);
+}
+.svc-live__arrow {
+  flex: none;
+  color: var(--fg-subtle);
+  transition: transform var(--dur-gel) var(--ease-gel), color 0.2s;
+}
+@media (hover: hover) {
+  .svc-live__link:hover { background-color: color-mix(in oklab, var(--fg) 5%, transparent); }
+  .svc-live__link:hover .svc-live__arrow {
+    color: var(--accent-ink);
+    transform: translate(2px, -2px);
+  }
+}
+.svc-live__more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--target-min);
+  margin-top: 4px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-radius: var(--r-pill);
+}
+.svc-live__more svg { transition: transform var(--dur-gel) var(--ease-gel); }
+@media (hover: hover) {
+  .svc-live__more:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .svc-live__more:hover svg { transform: translateX(2px); }
+}
+
+/* ==========================================================================
+   The lattice (#services): ONE frosted bento plate, one row per service, each
+   row split by a seam into a story cell and a spec cell.
+   ========================================================================== */
+.svc-stackup {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 640px) {
+  .svc-stackup { gap: 18px; }
+}
+
+/* ---- The light under the plate -----------------------------------------------
+   A fixed-size, pre-rasterised blob moved with translate3d: a compositor-only
+   change, where radial-gradient(... at var(--mx) var(--my)) would re-rasterise
+   the whole layer every frame. It sits between the plate's tint and the cells
+   (z-index 0 under the grid's 1), clipped to the plate's corners by its own box
+   so the plate itself never needs overflow: hidden (the specular rim survives).
+   Gated on data-lit, which the pointer handler sets only after a real sample,
+   so the light can never bloom at the top-left from an unset --mx/--my.
+   Keyboard focus does not reveal it: there is no pointer to justify a light.   */
+.svc-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+.svc-plate[data-lit="1"]:hover .svc-glow { opacity: var(--svc-light); }
+.svc-glow__blob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32rem;
+  height: 32rem;
+  margin: -16rem 0 0 -16rem;
+  border-radius: var(--r-pill);
+  background: radial-gradient(
+    circle closest-side,
+    var(--svc-glow-a),
+    color-mix(in oklab, var(--svc-glow-b) 55%, transparent) 55%,
+    transparent 100%
+  );
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 0.16s var(--ease-out);
+  will-change: transform;
+}
+/* Belt and braces, so the CSS gate can never outlive the JS gate. */
+@media (hover: none), (prefers-reduced-motion: reduce), (forced-colors: active) {
+  .svc-glow { display: none; }
+}
+.svc-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- A row -------------------------------------------------------------------
+   Phones: one column, the story's parts then the spec's, with "Already built"
+   moved to the end so each service closes on its proof and its link.
+   Tablets: one grid, the deliverables beside who-it-suits and the stack.
+   Desktop: the story cell and the spec cell side by side, split by a seam.     */
+.svc-row {
+  --svc-pad: 22px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--svc-pad);
+}
+.svc-story,
+.svc-spec { display: contents; }
+.svc-proof { order: 1; }
+
+@media (min-width: 640px) {
+  .svc-row {
+    --svc-pad: 34px 34px 32px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "head  head"
+      "title title"
+      "tag   tag"
+      "pitch pitch"
+      "get   who"
+      "get   stack"
+      "proof proof";
+    grid-template-rows: auto auto auto auto auto 1fr auto;
+    column-gap: 32px;
+  }
+  .svc-head { grid-area: head; }
+  .svc-title { grid-area: title; }
+  .svc-tagline { grid-area: tag; }
+  .svc-pitch { grid-area: pitch; }
+  .svc-proof { grid-area: proof; }
+  .svc-spec__who { grid-area: who; }
+  .svc-spec__get { grid-area: get; }
+  .svc-spec__stack { grid-area: stack; }
+}
+
+@media (min-width: 1024px) {
+  .svc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr);
+    grid-template-areas: none;
+    grid-template-rows: none;
+    column-gap: 0;
+    padding: 0;
+  }
+  .svc-story,
+  .svc-spec {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .svc-story { padding: 40px 44px 36px; }
+  .svc-spec {
+    gap: 26px;
+    padding: 40px 40px 40px;
+    box-shadow: -1px 0 0 0 var(--hairline); /* the seam between the cells */
+  }
+  .svc-proof { margin-top: auto; padding-top: 28px; }
+}
+@media (forced-colors: active) and (min-width: 1024px) {
+  .svc-spec { border-left: 1px solid CanvasText; }
+}
+
+/* ---- Story -------------------------------------------------------------------- */
+.svc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.svc-tile {
+  --tile: var(--svc-tile);
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+@media (hover: hover) {
+  .svc-row:hover .svc-tile { transform: scale(1.06) rotate(-3deg); }
+}
+@media (max-width: 639px) {
+  .svc-tile { --tile-size: 40px; }
+  .svc-tile svg { width: 19px; height: 19px; }
+}
+.svc-flag { min-height: 26px; font-size: 12px; }
+.svc-no {
+  margin-left: auto;
+  align-self: flex-start;
+  padding-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.svc-no span { color: var(--fg-muted); font-weight: 500; }
+
+.svc-title {
+  margin-top: 18px;
+  font-size: clamp(1.3rem, 1.9vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.032em;
+}
+@media (min-width: 640px) {
+  .svc-title { margin-top: 22px; }
+}
+.svc-tagline {
+  margin-top: 8px;
+  font-size: var(--text-headline);
+  font-weight: 550;
+  line-height: 1.42;
+  letter-spacing: -0.016em;
+  color: var(--svc-ink);
+}
+.svc-pitch {
+  margin-top: 14px;
+  max-width: 40rem;
+  font-size: var(--text-subhead);
+  line-height: 1.62;
+  letter-spacing: -0.006em;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .svc-pitch { font-size: 15px; }
+}
+
+/* Small caps-style group labels, as in the Work cards and the About Focus list. */
+.svc-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.svc-proof {
+  margin-top: 24px;
+  padding-top: 20px;
+  box-shadow: 0 -1px 0 var(--hairline);
+}
+@media (min-width: 1024px) {
+  .svc-proof { box-shadow: none; }
+}
+.svc-proof__text {
+  margin-top: 8px;
+  max-width: 40rem;
+  font-size: 14px;
+  line-height: 1.58;
+  color: var(--fg-muted);
+}
+.svc-proof__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--target-min);
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  /* The ramp ink pulled a little toward --fg: darker on light glass, lighter on
+     dark glass, so the link keeps its margin with the pointer light right behind it. */
+  color: color-mix(in oklab, var(--svc-ink) 78%, var(--fg));
+  text-decoration: none;
+  border-radius: var(--r-tile);
+}
+.svc-proof__link svg { transition: transform var(--dur-gel) var(--ease-gel); }
+@media (hover: hover) {
+  .svc-proof__link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+  }
+  .svc-proof__link:hover svg { transform: translateX(3px); }
+}
+
+/* ---- Spec ----------------------------------------------------------------------- */
+.svc-spec__who { margin-top: 24px; }
+.svc-spec__get { margin-top: 24px; }
+.svc-spec__stack { margin-top: 22px; }
+@media (min-width: 640px) {
+  .svc-spec__who,
+  .svc-spec__get { margin-top: 28px; }
+  .svc-spec__stack { margin-top: 22px; }
+}
+@media (min-width: 1024px) {
+  .svc-spec__who,
+  .svc-spec__get,
+  .svc-spec__stack { margin-top: 0; }
+}
+.svc-best {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+/* What you get: an inset grouped list, as in Settings. */
+.svc-get {
+  margin: 10px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  border-radius: var(--r-inset);
+}
+.svc-get__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 9px 16px;
+  font-size: var(--text-subhead);
+  line-height: 1.4;
+  letter-spacing: -0.008em;
+}
+.svc-get__row + .svc-get__row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 43px; /* starts at the text, not the check */
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+.svc-get__row svg { flex: none; color: var(--svc-ink); }
+
+.svc-stack {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   The closing call to action: one frost card. Its button is faux (a button
+   inside a frosted panel never gets its own backdrop).
+   ========================================================================== */
+.svc-cta {
+  display: grid;
+  gap: 18px;
+  padding: 24px 20px 22px;
+  border-radius: var(--r-panel);
+}
+@media (min-width: 640px) {
+  .svc-cta {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 20px;
+    row-gap: 22px;
+    padding: 32px 34px;
+  }
+  .svc-cta__actions { grid-column: 2; }
+}
+@media (min-width: 1024px) {
+  .svc-cta {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 28px;
+    align-items: center;
+    padding: 34px 40px;
+  }
+  .svc-cta__tile { align-self: start; }
+  .svc-cta__actions { grid-column: 3; }
+}
+@media (max-width: 639px) {
+  .svc-cta__tile { --tile-size: 40px; }
+  .svc-cta__tile svg { width: 19px; height: 19px; }
+}
+.svc-cta__title {
+  font-size: var(--text-title-3);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.032em;
+}
+.svc-cta__sub {
+  margin-top: 10px;
+  max-width: 40rem;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.008em;
+  color: var(--fg-muted);
+}
+.svc-cta__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .svc-cta__actions { align-items: stretch; }
+}
+@media (max-width: 420px) {
+  /* Narrow phones: the label may wrap rather than push the card wider. */
+  .svc-cta__btn {
+    width: 100%;
+    height: auto;
+    min-height: var(--btn-h);
+    padding-block: 10px;
+    white-space: normal;
+    text-align: center;
+  }
+}
+.svc-cta__meta {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+@media (min-width: 1024px) {
+  .svc-cta__meta { justify-content: center; }
+}
+.svc-cta__meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--target-min);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--r-tile);
+}
+.svc-cta__meta svg { flex: none; color: var(--accent-ink); }
+@media (hover: hover) {
+  .svc-cta__meta a:hover { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+}
+
+/* ---- Motion ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .svc-tile,
+  .svc-row:hover .svc-tile,
+  .svc-hero__back svg,
+  .svc-live__arrow,
+  .svc-live__more svg,
+  .svc-proof__link svg {
+    transition: none;
+    transform: none;
+  }
+}

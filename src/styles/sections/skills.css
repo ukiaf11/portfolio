@@ -1,0 +1,223 @@
+/* ==========================================================================
+   Skills (#skills)                                                  layer: sections
+   Owned by the Skills agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Two frosted surfaces for the whole section:
+     .skills-band    the "Primary focus" group, a wide frost band
+     .skills-bento   the other six groups, ONE frost panel split by hairlines
+   Everything inside them is faux: .tile icons, .chip capsules, the key swatches.
+   ========================================================================== */
+
+/* Section tokens, scoped to the section root (never :root). */
+.skills {
+  --skills-daily-plate: rgb(var(--accent-rgb) / 0.13);
+  --skills-daily-ring: rgb(var(--accent-rgb) / 0.4);
+  --skills-swatch-ring: rgb(18 30 60 / 0.2);
+  --skills-daily-dot: var(--accent-fill);
+  --skills-wash: rgb(var(--accent-rgb) / 0.1);
+}
+.dark .skills {
+  --skills-daily-plate: rgb(var(--accent-rgb) / 0.34);
+  --skills-daily-ring: rgb(133 193 255 / 0.4);
+  --skills-daily-dot: var(--accent-ink);
+  --skills-wash: rgb(var(--accent-rgb) / 0.2);
+  --skills-swatch-ring: rgb(255 255 255 / 0.22);
+}
+
+.skills-layout {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .skills-layout { gap: 20px; }
+}
+
+/* ---- Primary focus band ----------------------------------------------------- */
+.skills-band {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+  border-radius: var(--r-panel);
+  /* A faint accent pool in the top-left corner marks the featured group. It sits
+     over the glass tint, so solid mode and the contrast floor still apply. */
+  background-image: radial-gradient(90% 140% at 0% 0%, var(--skills-wash), transparent 62%);
+}
+@media (min-width: 640px) {
+  .skills-band { padding: 32px; }
+}
+@media (min-width: 1024px) {
+  .skills-band {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: 56px;
+    align-items: center;
+    padding: 36px 40px;
+  }
+}
+.skills-band__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.skills-band__text { min-width: 0; }
+.skills-band__kicker {
+  min-height: 26px;
+  font-size: 12px;
+}
+.skills-band__name {
+  margin-top: 12px;
+  font-size: var(--text-title-2);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.skills-band__note {
+  margin-top: 10px;
+  max-width: 30rem;
+  font-size: var(--text-subhead);
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+.skills-band__stack { min-width: 0; }
+@media (max-width: 479px) {
+  .skills-band__intro { flex-direction: column; gap: 16px; }
+}
+
+/* ---- Chips ------------------------------------------------------------------ */
+.skills-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.skills-chip {
+  min-height: 30px;
+  font-size: 13px;
+}
+.skills-chips--lg { gap: 9px; }
+.skills-chips--lg .skills-chip {
+  min-height: 38px;
+  padding: 0.3rem 1rem;
+  gap: 0.5rem;
+  font-size: 14.5px;
+  letter-spacing: -0.008em;
+}
+
+/* Daily driver: dot + weight + plate. Never colour on its own. */
+.skills-chip--daily {
+  color: var(--fg);
+  font-weight: 600;
+  background: var(--skills-daily-plate);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--skills-daily-ring),
+    0 1px 2px rgb(var(--accent-rgb) / 0.12);
+}
+.skills-chip__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--skills-daily-dot);
+  box-shadow: 0 0 0 2.5px rgb(var(--accent-rgb) / 0.18);
+}
+.skills-chips--lg .skills-chip__dot { width: 8px; height: 8px; }
+
+/* ---- Key ---------------------------------------------------------------------
+   Spells out what the plate means, next to the chips it explains. */
+.skills-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+  font-size: var(--text-footnote);
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+.skills-key__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.skills-key__swatch {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--skills-swatch-ring);
+}
+.skills-key__swatch--daily {
+  background: var(--skills-daily-plate);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--skills-daily-ring);
+}
+.skills-key__swatch .skills-chip__dot { width: 6px; height: 6px; box-shadow: none; }
+.skills-key__count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 479px) {
+  .skills-key__count { margin-left: 0; flex-basis: 100%; }
+}
+
+/* ---- The other six groups: one bento panel ---------------------------------- */
+@media (min-width: 640px) {
+  .skills-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .skills-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.skills-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+}
+@media (min-width: 1024px) {
+  .skills-cell { padding: 28px 30px 30px; }
+}
+.skills-cell__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.skills-cell__text { min-width: 0; }
+.skills-cell__name {
+  font-size: var(--text-headline);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: var(--track-headline);
+}
+.skills-cell__note {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+}
+
+/* ---- Modes ------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .skills-band { background-image: none; }
+  /* Plates and dots are backgrounds, which forced colours repaint: keep the dot
+     as a system-colour disc and give daily chips a heavier edge. */
+  .skills-chip__dot {
+    forced-color-adjust: none;
+    background: CanvasText;
+    box-shadow: none;
+  }
+  .skills-chip--daily { border-width: 2px; }
+  .skills-key__swatch { border: 1px solid CanvasText; }
+  .skills-key { border-top-color: CanvasText; }
+}

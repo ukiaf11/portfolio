@@ -1,76 +1,129 @@
-import {
-  Boxes, MessagesSquare, UtensilsCrossed, Repeat, Sprout, Github, Star, ArrowUpRight,
-} from 'lucide-react'
+import { ArrowUpRight, Boxes, Github, MessagesSquare, Repeat, Sprout, Star, UtensilsCrossed } from 'lucide-react'
 import Section from './Section'
 import Reveal from './Reveal'
+import LiquidGlass from './glass/LiquidGlass'
 import { projects, profile } from '../data/profile'
 
+/**
+ * Projects: the CV case studies. See DESIGN.md and styles/sections/projects.css.
+ *
+ * Frost budget: two backdrop-filter surfaces for the whole section, whatever the
+ * viewport. The featured case is its own wide frost panel; the other four share ONE
+ * frost bento, one hairline-divided cell each. The GitHub card is faux (no blur).
+ *
+ * These are described from the CV and deliberately NOT linked to the live sites in
+ * #work: which project runs which site is unconfirmed.
+ */
+
 const ICONS = { Boxes, MessagesSquare, UtensilsCrossed, Repeat, Sprout }
+/** Decorative app-icon tile colour per project icon. Tiles never carry text. */
+const TILES = {
+  Boxes: 'var(--sys-blue)',
+  MessagesSquare: 'var(--sys-teal)',
+  UtensilsCrossed: 'var(--sys-orange)',
+  Repeat: 'var(--sys-pink)',
+  Sprout: 'var(--sys-green)',
+}
 
-function ProjectCard({ project, index }) {
-  const Icon = ICONS[project.icon] ?? Boxes
-  const featured = project.featured
+const pad = (n) => String(n).padStart(2, '0')
+const hostOf = (url) => url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 
+function Tile({ icon, size = 'lg' }) {
+  const Icon = ICONS[icon] ?? Boxes
   return (
-    <article
-      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl surface card-glow p-6 transition-colors hover:bg-[var(--card-hover)] sm:p-7 ${
-        featured ? 'lg:col-span-2' : ''
-      }`}
+    <span
+      className={`tile ${size === 'lg' ? 'tile--lg' : ''}`}
+      style={{ '--tile': TILES[icon] ?? 'var(--sys-blue)' }}
+      aria-hidden="true"
     >
-      {/* Ghost index numeral — omitted on the featured card, where the badge sits in that corner */}
-      {!featured && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-4 right-3 font-mono text-[6rem] font-bold leading-none opacity-[0.045] transition-opacity duration-500 group-hover:opacity-[0.09]"
-        >
-          {String(index + 1).padStart(2, '0')}
-        </span>
-      )}
+      <Icon size={size === 'lg' ? 22 : 19} strokeWidth={2.1} />
+    </span>
+  )
+}
 
-      <div className="flex items-start justify-between gap-4">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-400/20 to-teal-400/12 text-brand-400 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-          <Icon size={22} />
-        </span>
-        {featured && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-400/12 px-2.5 py-1 font-mono text-[11px] font-medium text-brand-400">
-            <Star size={11} className="fill-current" />
-            Featured
-          </span>
-        )}
-      </div>
+/** The big engraved numeral in a card's corner. Drawn from a data attribute in CSS so
+ *  it stays out of the accessibility tree and out of the text-contrast measurements. */
+const Ordinal = ({ no }) => <span className="projects-ordinal" data-no={pad(no)} aria-hidden="true" />
 
-      <h3 className="mt-5 text-lg font-semibold leading-snug sm:text-xl">{project.name}</h3>
-      <p className="mt-2 text-[14px] leading-relaxed text-muted">{project.tagline}</p>
+function Points({ points, two = false }) {
+  return (
+    <ul className={`projects-points ${two ? 'projects-points--two' : ''}`}>
+      {points.map((point) => (
+        <li key={point}>{point}</li>
+      ))}
+    </ul>
+  )
+}
 
-      <ul className={`mt-5 space-y-2.5 ${featured ? 'sm:columns-2 sm:gap-6 sm:space-y-0' : ''}`}>
-        {project.points.map((point) => (
-          <li
-            key={point}
-            className={`flex gap-2.5 text-[13.5px] leading-relaxed text-muted ${
-              featured ? 'sm:mb-2.5 sm:break-inside-avoid' : ''
-            }`}
-          >
-            <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-brand-400" />
-            <span>{point}</span>
-          </li>
-        ))}
-      </ul>
-
-      <ul className="mt-auto flex flex-wrap gap-1.5 pt-6">
-        {project.stack.map((tech) => (
-          <li
-            key={tech}
-            className="rounded-md border px-2 py-1 font-mono text-[11px] text-muted transition-colors group-hover:border-brand-400/25"
-          >
+function Stack({ stack, label = false }) {
+  return (
+    <>
+      <h4 className={label ? 'projects-label' : 'sr-only'}>Built with</h4>
+      <ul className="projects-stack">
+        {stack.map((tech) => (
+          <li key={tech} className="chip">
             {tech}
           </li>
         ))}
       </ul>
-    </article>
+    </>
+  )
+}
+
+function FeaturedCase({ project, no }) {
+  const titleId = `project-${pad(no)}`
+  return (
+    <LiquidGlass as="article" tier="frost" className="projects-feature" aria-labelledby={titleId}>
+      <Ordinal no={no} />
+      <div className="projects-feature__intro">
+        <div className="projects-feature__marks">
+          <Tile icon={project.icon} />
+          <span className="chip chip--accent projects-badge">
+            <Star size={12} strokeWidth={2.4} aria-hidden="true" />
+            Featured
+          </span>
+        </div>
+        <h3 id={titleId} className="projects-feature__name">
+          {project.name}
+        </h3>
+        <p className="projects-feature__tagline">{project.tagline}</p>
+      </div>
+
+      <div className="projects-feature__body">
+        <h4 className="projects-label">Highlights</h4>
+        <Points points={project.points} two />
+      </div>
+
+      <div className="projects-feature__stack">
+        <Stack stack={project.stack} label />
+      </div>
+    </LiquidGlass>
+  )
+}
+
+function Case({ project, no }) {
+  const titleId = `project-${pad(no)}`
+  return (
+    <li className="bento__cell projects-case">
+      <article className="projects-case__inner" aria-labelledby={titleId}>
+        <Ordinal no={no} />
+        <Tile icon={project.icon} size="md" />
+        <h3 id={titleId} className="projects-case__name">
+          {project.name}
+        </h3>
+        <p className="projects-case__tagline">{project.tagline}</p>
+        <Points points={project.points} />
+        <Stack stack={project.stack} />
+      </article>
+    </li>
   )
 }
 
 export default function Projects() {
+  const featuredIndex = Math.max(0, projects.findIndex((p) => p.featured))
+  const featured = projects[featuredIndex]
+  const rest = projects.map((p, i) => ({ p, no: i + 1 })).filter(({ p }) => p !== featured)
+
   return (
     <Section
       id="projects"
@@ -78,40 +131,47 @@ export default function Projects() {
       title="Things I've architected and shipped"
       lead="Platforms built end to end — from the credit engine that prices every transaction, to embeddable assistants other businesses drop into their own sites."
     >
-      <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
-        {projects.map((project, i) => (
-          <Reveal
-            key={project.name}
-            delay={(i % 2) * 90}
-            className={project.featured ? 'lg:col-span-2' : ''}
-          >
-            <ProjectCard project={project} index={i} />
-          </Reveal>
-        ))}
-      </div>
+      <div className="projects">
+        <Reveal>
+          <FeaturedCase project={featured} no={featuredIndex + 1} />
+        </Reveal>
 
-      <Reveal delay={120}>
-        <a
-          href={profile.github}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="group mt-6 flex items-center justify-between gap-4 rounded-2xl surface card-glow p-6 transition-colors hover:bg-[var(--card-hover)]"
-        >
-          <span className="flex items-center gap-4">
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-400/12 text-brand-400 transition-transform group-hover:scale-110">
-              <Github size={22} />
+        {rest.length > 0 && (
+          <Reveal delay={80}>
+            <LiquidGlass as="div" tier="frost" className="bento projects-grid">
+              <ul className="bento__grid projects-grid__cells">
+                {rest.map(({ p, no }) => (
+                  <Case key={p.name} project={p} no={no} />
+                ))}
+              </ul>
+            </LiquidGlass>
+          </Reveal>
+        )}
+
+        <Reveal delay={120}>
+          <LiquidGlass
+            as="a"
+            tier="faux"
+            interactive
+            href={profile.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="projects-more"
+          >
+            <span className="tile tile--lg projects-more__tile" aria-hidden="true">
+              <Github size={22} strokeWidth={2.1} />
             </span>
-            <span>
-              <span className="block text-[15px] font-semibold">More on GitHub</span>
-              <span className="block font-mono text-[12.5px] text-muted">github.com/ukiaf11</span>
+            <span className="projects-more__text">
+              <span className="projects-more__title">More on GitHub</span>
+              <span className="projects-more__host">{hostOf(profile.github)}</span>
             </span>
-          </span>
-          <ArrowUpRight
-            size={20}
-            className="shrink-0 text-muted transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400"
-          />
-        </a>
-      </Reveal>
+            <span className="sr-only"> (opens in a new tab)</span>
+            <span className="projects-more__go" aria-hidden="true">
+              <ArrowUpRight size={18} strokeWidth={2.3} />
+            </span>
+          </LiquidGlass>
+        </Reveal>
+      </div>
     </Section>
   )
 }

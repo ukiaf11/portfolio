@@ -2,6 +2,7 @@ import Background from './components/Background'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
 import About from './components/About'
+import LiveWork from './components/LiveWork'
 import Skills from './components/Skills'
 import Experience from './components/Experience'
 import Projects from './components/Projects'
@@ -14,9 +15,10 @@ export default function App() {
     <>
       <Background />
       <Nav />
-      <main>
+      <main id="main" tabIndex={-1}>
         <Hero />
         <About />
+        <LiveWork />
         <Skills />
         <Experience />
         <Projects />

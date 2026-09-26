@@ -113,12 +113,16 @@ different filename). The nav and contact download buttons both point at it.
 
 ## Design notes
 
+- **Design system** — the Liquid Glass system, its tokens, material tiers, components and rules
+  are documented in [`DESIGN.md`](DESIGN.md). Read it before changing any styling.
 - **Theming** — light/dark is a `.dark` class on `<html>`, set before first paint by an inline
-  script in `index.html` so there is no flash. It follows the OS setting until the user picks a
-  theme, which is then stored in `localStorage`.
-- **Colours** — semantic tokens (`--bg`, `--fg`, `--card`, `--line`, `--grad-*`) are defined per
-  theme in `src/index.css`. Accent tokens (`--color-brand-400`, `--color-teal-400`) are overridden
-  per theme too, so every Tailwind accent utility darkens automatically in light mode.
+  script so there is no flash. The script is generated from `src/lib/prepaint.js` and injected
+  into both HTML entries by a small plugin in `vite.config.js`; the same module drives the
+  runtime theme store (`src/lib/theme.js`). It follows the OS setting until the user picks a
+  theme, which is then stored in `localStorage`, and keeps `<meta name="theme-color">` in step.
+- **Colours** — design tokens are defined per theme in `src/styles/tokens.css`. The legacy accent
+  tokens (`--color-brand-400`, `--color-teal-400`) are re-pointed per theme there too, so the
+  Tailwind accent utilities the older sections still use darken automatically in light mode.
 - **Motion** — scroll reveals use a shared `IntersectionObserver` (`components/Reveal.jsx`), and
   everything is disabled under `prefers-reduced-motion`. That block zeroes transition and
   animation **delays** as well as durations: a stagger is expressed as a delay, so without

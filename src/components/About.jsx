@@ -1,67 +1,100 @@
-import { Braces, Cpu, Layers, Lock } from 'lucide-react'
+import { Boxes, Braces, Cpu, Layers, Lock, MonitorSmartphone, Server, Sparkles } from 'lucide-react'
 import Section from './Section'
 import Reveal from './Reveal'
+import LiquidGlass from './glass/LiquidGlass'
 import { profile } from '../data/profile'
 
 const pillars = [
   {
     icon: Layers,
+    tile: 'var(--sys-blue)',
     title: 'Microservice architecture',
     body: 'Splitting platforms into services that scale and deploy on their own terms, with a credit core holding the transaction lifecycle together.',
   },
   {
     icon: Braces,
+    tile: 'var(--sys-indigo)',
     title: 'Django & DRF backends',
     body: 'Secure APIs, authentication systems and data models built to survive real multi-tenant traffic, not just a demo.',
   },
   {
     icon: Lock,
+    tile: 'var(--sys-orange)',
     title: 'Security & fintech',
     body: 'Double-entry ledgers, live currency conversion, Razorpay flows and credentials moved off .env into Google Secret Manager.',
   },
   {
     icon: Cpu,
+    tile: 'var(--sys-pink)',
     title: 'AI integration',
-    body: 'Gemini and Claude APIs wired into products through Google AI Studio — assistants and automation that ship, not prototypes.',
+    body: 'Gemini and Claude APIs wired into products through Google AI Studio: assistants and automation that ship, not prototypes.',
   },
 ]
 
+/** What used to be a `const focus = {…}` code block, as an inset grouped list. */
+const focus = [
+  { icon: Server, tile: 'var(--sys-blue)', label: 'Backend', value: 'Django · DRF · PostgreSQL' },
+  { icon: MonitorSmartphone, tile: 'var(--sys-teal)', label: 'Frontend', value: 'React' },
+  { icon: Boxes, tile: 'var(--sys-indigo)', label: 'Scale', value: 'Microservices · multi-tenant' },
+  { icon: Sparkles, tile: 'var(--sys-purple)', label: 'Edge', value: 'AI integration · fintech' },
+]
+
+/**
+ * The summary's closing line is the section lead: it says the title in a sentence, and it
+ * fills the right half of the two-column head on wide screens.
+ *
+ * Two frosted panels, no more, as two wide bands: the story (the summary beside the Focus
+ * grouped list) and ONE bento panel that holds the four pillars, divided by hairlines. The bento replaced
+ * four separate frosted cards, which cost four filter passes and pushed the seam with the
+ * hero over the frost budget. Everything inside both panels is faux (insets, tiles).
+ */
 export default function About() {
   return (
-    <Section id="about" eyebrow="About" title="Bridging infrastructure and experience">
-      <div className="grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+    <Section
+      id="about"
+      eyebrow="About"
+      title="Bridging infrastructure and experience"
+      lead={profile.summaryTail}
+    >
+      <div className="about">
         <Reveal>
-          <p className="text-base leading-relaxed text-muted sm:text-[17px]">{profile.summary}</p>
-          <p className="mt-4 text-base leading-relaxed text-muted sm:text-[17px]">{profile.summaryTail}</p>
+          <LiquidGlass as="div" tier="frost" className="about__story">
+            <p className="about__lede">{profile.summary}</p>
 
-          <div className="mt-8 rounded-2xl surface p-5 font-mono text-[13px] leading-relaxed">
-            <div className="flex gap-1.5 pb-3.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-teal-400/70" />
+            <div className="about-focus inset">
+              <h3 className="about-focus__title">Focus</h3>
+              <dl className="about-focus__list">
+                {focus.map(({ icon: Icon, tile, label, value }) => (
+                  <div key={label} className="about-focus__row">
+                    <dt className="about-focus__label">
+                      <span className="tile tile--sm" style={{ '--tile': tile }} aria-hidden="true">
+                        <Icon size={15} strokeWidth={2.2} />
+                      </span>
+                      {label}
+                    </dt>
+                    <dd className="about-focus__value">{value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
-            <p><span className="text-muted">const</span> <span className="text-brand-400">focus</span> = {'{'}</p>
-            <p className="pl-4"><span className="text-teal-400">backend</span>: <span className="text-muted">'Django · DRF · PostgreSQL'</span>,</p>
-            <p className="pl-4"><span className="text-teal-400">frontend</span>: <span className="text-muted">'React'</span>,</p>
-            <p className="pl-4"><span className="text-teal-400">scale</span>: <span className="text-muted">'microservices · multi-tenant'</span>,</p>
-            <p className="pl-4"><span className="text-teal-400">edge</span>: <span className="text-muted">'AI integration · fintech'</span>,</p>
-            <p>{'}'}</p>
-          </div>
+          </LiquidGlass>
         </Reveal>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-          {pillars.map((p, i) => (
-            <Reveal key={p.title} delay={i * 90}>
-              <article className="group h-full rounded-2xl surface card-glow p-5 transition-colors hover:bg-[var(--card-hover)]">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-400/12 text-brand-400 transition-transform group-hover:scale-110">
-                  <p.icon size={19} />
-                </span>
-                <h3 className="mt-4 text-[15px] font-semibold">{p.title}</h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted">{p.body}</p>
-              </article>
-            </Reveal>
-          ))}
-        </div>
+        <Reveal delay={100}>
+          <LiquidGlass as="div" tier="frost" className="bento about__bento">
+            <ul className="bento__grid about__pillars">
+              {pillars.map(({ icon: Icon, tile, title, body }) => (
+                <li key={title} className="bento__cell about-pillar">
+                  <span className="tile about-pillar__tile" style={{ '--tile': tile }} aria-hidden="true">
+                    <Icon size={19} strokeWidth={2.1} />
+                  </span>
+                  <h3 className="about-pillar__title">{title}</h3>
+                  <p className="about-pillar__body">{body}</p>
+                </li>
+              ))}
+            </ul>
+          </LiquidGlass>
+        </Reveal>
       </div>
     </Section>
   )

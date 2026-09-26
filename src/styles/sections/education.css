@@ -1,0 +1,234 @@
+/* ==========================================================================
+   Education (#education)                                                  layer: sections
+   Owned by the Education agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Anatomy: ONE frost bento (.education) with two cells.
+     .education-steps   the academic timeline: an inset grouped list (faux) with a
+                        rail through the leading nodes
+     .education-creds   the certifications: one inset plate (faux) each
+   ========================================================================== */
+
+/* Section tokens, scoped to the section root. */
+.education {
+  --edu-rail: color-mix(in oklab, var(--fg) 16%, transparent);
+  --edu-ring: var(--fg-subtle);
+  /* Node geometry, shared by the node and the rail segments around it. */
+  --edu-pad-y: 15px;
+  --edu-pad-x: 18px;
+  --edu-lead: 28px; /* the node column */
+  --edu-node: 12px;
+  --edu-node-top: 5px; /* centres the node on the first line of the degree */
+  --edu-gap: 5px; /* clearance between the rail and a node */
+}
+.dark .education { --edu-rail: color-mix(in oklab, var(--fg) 22%, transparent); }
+
+.education__grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1024px) {
+  .education__grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+}
+
+.education-group {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px 26px;
+}
+@media (min-width: 640px) {
+  .education-group { padding: 30px 32px 34px; }
+}
+
+.education-group__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.education-group__title {
+  font-size: var(--text-headline);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: var(--track-headline);
+}
+
+/* ---- Academic timeline ----------------------------------------------------- */
+.education-steps {
+  margin: 18px 0 0;
+  padding: 4px 0;
+  list-style: none;
+}
+.education-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--edu-lead) minmax(0, 1fr) auto;
+  column-gap: 14px;
+  align-items: start;
+  padding: var(--edu-pad-y) var(--edu-pad-x);
+}
+/* Inset separator: starts at the text, not at the rail (as in Settings). */
+.education-step + .education-step::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--edu-pad-x) + var(--edu-lead) + 14px);
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+
+.education-step__node {
+  justify-self: center;
+  width: var(--edu-node);
+  height: var(--edu-node);
+  margin-top: var(--edu-node-top);
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 2px var(--edu-ring);
+}
+/* The rail: two segments per row (above and below the node), so it never runs
+   through a hollow node and needs no opaque fill to hide behind. The node is not
+   positioned, so these resolve against the row. */
+.education-step__node::before,
+.education-step__node::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--edu-pad-x) + var(--edu-lead) / 2 - 1px);
+  width: 2px;
+  border-radius: var(--r-pill);
+  background: var(--edu-rail);
+}
+.education-step__node::before {
+  top: 0;
+  height: calc(var(--edu-pad-y) + var(--edu-node-top) - var(--edu-gap));
+}
+.education-step__node::after {
+  top: calc(var(--edu-pad-y) + var(--edu-node-top) + var(--edu-node) + var(--edu-gap));
+  bottom: 0;
+}
+.education-step:first-child .education-step__node::before,
+.education-step:last-child .education-step__node::after {
+  display: none;
+}
+
+/* Current: a filled node with a halo (the others are hollow), plus the status chip. */
+.education-step--current {
+  --edu-node: 14px;
+  --edu-node-top: 4px;
+}
+.education-step--current .education-step__node {
+  background: var(--live);
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--live) 22%, transparent),
+    inset 0 1px 0 var(--glass-rim-soft);
+}
+.education-step--current .education-step__degree { font-weight: 650; }
+.education-step--current .education-step__node::after {
+  top: calc(var(--edu-pad-y) + var(--edu-node-top) + var(--edu-node) + var(--edu-gap) + 3px);
+}
+
+.education-step__text { min-width: 0; }
+.education-step__degree {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.014em;
+}
+.education-step__school {
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+.education-step__period {
+  margin-top: 1px;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+.education-step__period.chip {
+  margin-top: -4px;
+  min-height: 28px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* Narrow: the period drops under the school, so long names keep their width, and the
+   cell and plate paddings tighten so the double inset does not squeeze the text. */
+@media (max-width: 559px) {
+  .education { --edu-pad-x: 14px; --edu-lead: 22px; }
+  .education-group { padding: 22px 16px 18px; }
+  .education-cred { padding: 16px 16px 18px; }
+  .education-step { grid-template-columns: var(--edu-lead) minmax(0, 1fr); column-gap: 12px; }
+  .education-step + .education-step::before { left: calc(var(--edu-pad-x) + var(--edu-lead) + 12px); }
+  .education-step__period {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 6px;
+  }
+  .education-step__period.chip { margin-top: 10px; }
+}
+
+/* ---- Certifications ----------------------------------------------------------- */
+.education-creds {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .education-creds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Wide: the plates share the height of the timeline beside them, so both cells end
+   on one line. */
+@media (min-width: 1024px) {
+  .education-creds { flex: 1; grid-auto-rows: 1fr; }
+}
+.education-cred {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px 20px;
+}
+.education-cred__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.education-cred__period {
+  font-size: 13.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+.education-cred__name {
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: var(--text-headline);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: var(--track-headline);
+}
+.education-cred__issuer {
+  margin-top: 3px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+/* ---- Modes ---------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .education-steps,
+  .education-cred { border: 1px solid CanvasText; }
+  .education-step__node { border: 2px solid CanvasText; box-shadow: none; }
+  .education-step--current .education-step__node { background: Highlight; border-color: Highlight; }
+  .education-step__node::before,
+  .education-step__node::after,
+  .education-step + .education-step::before { background: CanvasText; }
+}

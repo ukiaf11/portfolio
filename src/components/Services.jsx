@@ -1,11 +1,14 @@
 import { useEffect, useRef } from 'react'
-import { Bot, Gauge, LayoutDashboard, Network, ArrowUpRight, ArrowRight } from 'lucide-react'
+import { ArrowRight, Bot, Check, Gauge, LayoutDashboard, Mail, MessagesSquare, Network, Phone } from 'lucide-react'
 import Section from './Section'
 import Reveal from './Reveal'
-import { accentFor } from '../lib/accent'
+import LiquidGlass from './glass/LiquidGlass'
+import { accentFor, tileFor } from '../lib/accent'
 import { services, servicesCta, profile } from '../data/profile'
 
 const ICONS = { Gauge, LayoutDashboard, Network, Bot }
+
+const pad = (n) => String(n).padStart(2, '0')
 
 /**
  * Moves the light under the plate.
@@ -14,7 +17,7 @@ const ICONS = { Gauge, LayoutDashboard, Network, Bot }
  * pointer move is a compositor transform rather than a repaint of the whole layer.
  * --mx/--my are written on the childless glow node so style invalidation touches one
  * element instead of the section's entire subtree, and the single layout read is
- * inside the rAF callback — at most once per frame, never once per pointermove.
+ * inside the rAF callback: at most once per frame, never once per pointermove.
  */
 function useSpotlight() {
   const plateRef = useRef(null)
@@ -27,8 +30,7 @@ function useSpotlight() {
 
     // Both queries are subscribed rather than sampled once: a tablet visitor can
     // attach a mouse, and an OS motion preference can be toggled, mid-session. The
-    // CSS side of this gate is live, so sampling once would let the two disagree
-    // for the rest of the session.
+    // CSS side of this gate is live, so sampling once would let the two disagree.
     const canHover = window.matchMedia('(hover: hover)')
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
 
@@ -42,8 +44,8 @@ function useSpotlight() {
       const rect = plate.getBoundingClientRect()
       glow.style.setProperty('--mx', `${cx - rect.left}px`)
       glow.style.setProperty('--my', `${cy - rect.top}px`)
-      // Only once a real pointer sample has landed is the light allowed to show,
-      // so it can never bloom at the plate's top-left from an unset --mx/--my.
+      // Only once a real pointer sample has landed may the light show, so it can
+      // never bloom at the plate's top-left from an unset --mx/--my.
       plate.dataset.lit = '1'
     }
 
@@ -98,109 +100,177 @@ function useSpotlight() {
   return { plateRef, glowRef }
 }
 
-function ServiceCell({ service, index, total }) {
+/**
+ * One service = one row of the lattice, split by a seam into two cells:
+ *   story  what it is and why it matters (tile, name, tagline, pitch) and the real
+ *          project it is grounded in, with the link to that build
+ *   spec   who it suits, what you get (an inset grouped list), what it is built with
+ * Every colour that varies per row is one step on the accent ramp (lib/accent.js):
+ * --svc-tile fills the icon tile, --svc-ink marks the tagline, the checks and the link.
+ */
+function ServiceRow({ service, index, total }) {
   const Icon = ICONS[service.icon] ?? LayoutDashboard
+  const titleId = `service-${service.id}-title`
 
   return (
-    <article
-      className="svc-cell"
-      style={{ '--i': String(index), '--accent': accentFor(index, total) }}
+    <li
+      id={`service-${service.id}`}
+      className="bento__cell svc-row"
+      style={{ '--svc-ink': accentFor(index, total), '--svc-tile': tileFor(index, total) }}
     >
-      <div className="svc-head">
-        <span className="svc-tile">
-          <Icon size={19} strokeWidth={1.9} />
-        </span>
-        {service.flag && <span className="svc-flag">{service.flag}</span>}
-        <span aria-hidden="true" className="svc-head__line" />
+      <div className="svc-story">
+        <div className="svc-head">
+          <span className="tile tile--lg svc-tile" aria-hidden="true">
+            <Icon size={22} strokeWidth={2.1} />
+          </span>
+          {service.flag && <span className="chip chip--accent svc-flag">{service.flag}</span>}
+          <span className="svc-no" aria-hidden="true">
+            {pad(index + 1)}
+            <span> / {pad(total)}</span>
+          </span>
+        </div>
+
+        <h3 id={titleId} className="svc-title">
+          {service.title}
+        </h3>
+        <p className="svc-tagline">{service.tagline}</p>
+        <p className="svc-pitch">{service.pitch}</p>
+
+        <div className="svc-proof">
+          <h4 className="svc-label">Already built</h4>
+          <p className="svc-proof__text">{service.proof}</p>
+          {/* The projects live on the home page, so the link is absolute: "#projects"
+              does not exist on /services/. */}
+          <a href="/#projects" className="svc-proof__link">
+            See the build
+            <span className="sr-only">: the projects behind {service.title}</span>
+            <ArrowRight size={16} strokeWidth={2.3} aria-hidden="true" />
+          </a>
+        </div>
       </div>
 
-      <h3 className="mt-4 text-[17px] leading-snug font-semibold">{service.title}</h3>
-      <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: 'var(--accent)' }}>
-        {service.tagline}
-      </p>
-      <p className="mt-3 text-[13.5px] leading-relaxed text-muted">{service.pitch}</p>
+      <div className="svc-spec">
+        <div className="svc-spec__who">
+          <h4 className="svc-label">Best for</h4>
+          <p className="svc-best">{service.bestFor}</p>
+        </div>
 
-      <p className="mt-4 text-[12.5px] leading-relaxed text-muted">
-        <span className="font-mono text-[10px] tracking-[0.14em] uppercase" style={{ color: 'var(--accent)' }}>
-          Best for
-        </span>
-        <span className="mt-1 block">{service.bestFor}</span>
-      </p>
+        <div className="svc-spec__get">
+          <h4 className="svc-label">What you get</h4>
+          <ul className="svc-get inset">
+            {service.deliverables.map((item) => (
+              <li key={item} className="svc-get__row">
+                <Check size={15} strokeWidth={2.6} aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-      <ul className="svc-ledger">
-        {service.deliverables.map((item, j) => (
-          <li key={item} style={{ '--j': String(j) }}>
-            {item}
-          </li>
-        ))}
-      </ul>
-
-      <ul className="mt-4 flex flex-wrap gap-1.5">
-        {service.stack.map((tech) => (
-          <li key={tech} className="svc-chip">
-            {tech}
-          </li>
-        ))}
-      </ul>
-
-      <p className="mt-4 text-[12px] leading-relaxed text-muted">{service.proof}</p>
-
-      <a href="#projects" className="svc-proof mt-3 font-mono text-[11.5px]">
-        See the build
-        <ArrowUpRight size={13} className="shrink-0" aria-hidden="true" />
-        <span className="sr-only"> — the projects behind {service.title}</span>
-      </a>
-    </article>
+        <div className="svc-spec__stack">
+          <h4 className="svc-label">Built with</h4>
+          <ul className="svc-stack">
+            {service.stack.map((tech) => (
+              <li key={tech} className="chip">
+                {tech}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </li>
   )
 }
 
+/** The closing call to action: one frost card, faux buttons inside it (no nesting). */
+function ServicesCta() {
+  const mailto = `mailto:${profile.email}?subject=${encodeURIComponent(servicesCta.mailSubject)}&body=${encodeURIComponent(servicesCta.mailBody)}`
+
+  return (
+    <LiquidGlass as="div" tier="frost" role="group" aria-labelledby="svc-cta-title" className="svc-cta">
+      <span className="tile tile--lg svc-cta__tile" style={{ '--tile': 'var(--sys-green)' }} aria-hidden="true">
+        <MessagesSquare size={22} strokeWidth={2.1} />
+      </span>
+
+      <div className="svc-cta__copy">
+        <h3 id="svc-cta-title" className="svc-cta__title">
+          {servicesCta.headline}
+        </h3>
+        <p className="svc-cta__sub">{servicesCta.sub}</p>
+      </div>
+
+      <div className="svc-cta__actions">
+        <LiquidGlass
+          as="a"
+          href={mailto}
+          tier="faux"
+          variant="prominent"
+          interactive
+          className="btn btn-lg glass-capsule svc-cta__btn"
+        >
+          {servicesCta.buttonLabel}
+          <ArrowRight size={17} strokeWidth={2.2} aria-hidden="true" />
+        </LiquidGlass>
+        <ul className="svc-cta__meta" aria-label="Or reach me directly">
+          <li>
+            <a href={`mailto:${profile.email}`}>
+              <Mail size={15} aria-hidden="true" />
+              {profile.email}
+            </a>
+          </li>
+          <li>
+            <a href={`tel:${profile.phone.replace(/\s/g, '')}`}>
+              <Phone size={15} aria-hidden="true" />
+              {profile.phone}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </LiquidGlass>
+  )
+}
+
+/**
+ * The lattice: ONE frosted bento plate, subdivided by hairline seams, with a light that
+ * travels underneath it on fine pointers. One filter pass for all four services, and
+ * the CTA card is the section's second and last frost surface.
+ */
 export default function Services() {
   const { plateRef, glowRef } = useSpotlight()
 
   return (
     <Section
       id="services"
+      className="svc"
+      numbered={false}
       eyebrow="Services"
       title={
         <>
-          What I can <span className="gradient-text">build for you</span>
+          What I can <span className="svc-accent-text">build for you</span>
         </>
       }
       lead="Four kinds of work I take on — websites, custom applications, APIs and AI features. Each one is grounded in something I have already built, not a service line invented for this page."
     >
-      <Reveal>
-        <div ref={plateRef} className="svc-plate">
-          {/* The light lives under the cell faces: soft across each face, full
-              strength through the seams, where there is never any text. */}
-          <div ref={glowRef} aria-hidden="true" className="svc-glow">
-            <span className="svc-glow__blob" />
-          </div>
+      <div className="svc-stackup">
+        <Reveal>
+          <LiquidGlass as="div" tier="frost" ref={plateRef} className="bento svc-plate">
+            {/* The light sits under the cells: a soft wash that follows the pointer. */}
+            <div ref={glowRef} aria-hidden="true" className="svc-glow">
+              <span className="svc-glow__blob" />
+            </div>
 
-          <div className="svc-grid">
-            {services.map((service, i) => (
-              <ServiceCell key={service.id} service={service} index={i} total={services.length} />
-            ))}
-          </div>
-        </div>
-      </Reveal>
+            <ol className="bento__grid svc-grid">
+              {services.map((service, i) => (
+                <ServiceRow key={service.id} service={service} index={i} total={services.length} />
+              ))}
+            </ol>
+          </LiquidGlass>
+        </Reveal>
 
-      <Reveal delay={120}>
-        <a
-          href={`mailto:${profile.email}?subject=${encodeURIComponent(servicesCta.mailSubject)}&body=${encodeURIComponent(servicesCta.mailBody)}`}
-          className="group mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl surface card-glow p-6 transition-colors hover:bg-[var(--card-hover)] sm:mt-5"
-        >
-          <span className="min-w-0">
-            <span className="block text-[15px] font-semibold">{servicesCta.headline}</span>
-            <span className="mt-1 block max-w-xl text-[13px] leading-relaxed text-muted">
-              {servicesCta.sub}
-            </span>
-          </span>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition-transform group-hover:-translate-y-0.5">
-            {servicesCta.buttonLabel}
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
-          </span>
-        </a>
-      </Reveal>
+        <Reveal delay={80}>
+          <ServicesCta />
+        </Reveal>
+      </div>
     </Section>
   )
 }

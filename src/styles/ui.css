@@ -1,0 +1,424 @@
+/* ==========================================================================
+   Tahoe Clear · primitives                                       layer: ui
+   Wallpaper, reveal, type, buttons, chips, icon tiles, insets, the section
+   frame, the skip link and the switch. Section-specific styling belongs in
+   styles/sections/<section>.css, not here. See DESIGN.md for the catalogue.
+   ========================================================================== */
+
+/* ---- Wallpaper -------------------------------------------------------------
+   A static, fixed gradient mesh. Static on purpose: every glass surface on
+   screen re-filters whenever its backdrop changes, so a moving wallpaper
+   would cost N filter passes per frame while the page sits idle.
+   Three layers inside one fixed box:
+     mesh   big soft colour fields (radial gradients, no filter: blur)
+     waves  Tahoe-style crests: rings with one crisp edge and one soft edge,
+            which also give the refracting controls edges to bend
+     grain  2-4% noise so blurred glass never bands                       */
+.wallpaper {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 100lvh;
+  z-index: var(--z-wallpaper);
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  background-color: var(--wp-base);
+}
+.wallpaper > * {
+  position: absolute;
+  inset: 0;
+}
+.wallpaper__mesh {
+  background:
+    radial-gradient(58% 62% at 10% 6%, rgb(var(--wp-sky) / var(--wp-sky-a)), transparent 72%),
+    radial-gradient(52% 58% at 94% 14%, rgb(var(--wp-lilac) / var(--wp-lilac-a)), transparent 72%),
+    radial-gradient(58% 56% at 86% 92%, rgb(var(--wp-peach) / var(--wp-peach-a)), transparent 70%),
+    radial-gradient(56% 62% at 4% 96%, rgb(var(--wp-aqua) / var(--wp-aqua-a)), transparent 72%),
+    radial-gradient(40% 44% at 52% 58%, rgb(var(--wp-rose) / var(--wp-rose-a)), transparent 72%);
+}
+.wallpaper__waves {
+  inset: -12% -12% -12% -12%;
+  background:
+    /* lower-right sweep: bright crest over a deeper body */
+    radial-gradient(78% 64% at 104% 108%, transparent 61.5%, rgb(var(--wp-crest) / var(--wp-crest-a)) 62%, rgb(var(--wp-crest) / 0) 70%),
+    radial-gradient(96% 80% at 108% 116%, transparent 55%, rgb(var(--wp-deep) / var(--wp-deep-a)) 55.4%, rgb(var(--wp-deep) / 0) 66%),
+    /* upper-left counter-sweep */
+    radial-gradient(70% 60% at -6% -12%, transparent 63%, rgb(var(--wp-crest) / calc(var(--wp-crest-a) * 0.8)) 63.5%, rgb(var(--wp-crest) / 0) 71%),
+    radial-gradient(88% 72% at -10% -18%, transparent 57%, rgb(var(--wp-deep) / calc(var(--wp-deep-a) * 0.7)) 57.4%, rgb(var(--wp-deep) / 0) 67%);
+}
+.wallpaper__grain {
+  opacity: var(--wp-grain-a);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+@media (forced-colors: active) {
+  .wallpaper { display: none; }
+}
+
+/* ---- Reveal ------------------------------------------------------------------
+   The old rule (opacity + will-change on the wrapper) made every <Reveal> a
+   backdrop root, so glass inside it rendered with no blur at all. Now:
+   - the wrapper only ever TRANSFORMS (transform ancestors are safe);
+   - a wrapper that holds no glass fades as a whole;
+   - a wrapper that holds glass fades each glass surface itself, which is
+     safe because opacity on the element that owns the backdrop-filter does
+     not cut it off from its backdrop.
+   An animation (not a transition) carries the fade, so it never clobbers the
+   gel `transition: transform` a glass control already has.
+   The class lists below name every backdrop-filter surface. The legacy names
+   (.surface, .skill-card, .svc-plate) go when their sections migrate.         */
+.reveal {
+  transform: translate3d(0, var(--reveal-lift), 0);
+  transition: transform var(--dur-reveal) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  transform: none;
+}
+.reveal:not(:has(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate)) {
+  opacity: 0;
+  transition:
+    transform var(--dur-reveal) var(--ease-out) var(--reveal-delay, 0ms),
+    opacity var(--dur-reveal) var(--ease-out) var(--reveal-delay, 0ms);
+}
+.reveal.is-visible:not(:has(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate)) {
+  opacity: 1;
+}
+.reveal:not(.is-visible) :is(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate, .reveal-fade) {
+  opacity: 0;
+}
+.reveal.is-visible :is(.glass-frost, .glass-refract, .glass-clear, .surface, .skill-card, .svc-plate, .reveal-fade) {
+  animation: reveal-fade var(--dur-reveal) var(--ease-out) var(--reveal-delay, 0ms) backwards;
+}
+@keyframes reveal-fade {
+  from { opacity: 0; }
+}
+
+/* ---- Type ------------------------------------------------------------------- */
+.display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: var(--track-display);
+  font-optical-sizing: auto;
+}
+
+/* ---- Buttons ----------------------------------------------------------------
+   Always capsules. Pair with a glass tier (<LiquidGlass> or the .glass classes).
+   The 1px transparent border is what Windows High Contrast paints, and the
+   forced-colors block makes every variant a recognisable system button.    */
+.btn {
+  --btn-h: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: var(--btn-h);
+  padding-inline: 1.3rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  font-size: var(--text-callout);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn svg { flex: none; }
+.btn-lg { --btn-h: 52px; padding-inline: 1.5rem; font-size: 16px; }
+.btn-sm { --btn-h: 40px; padding-inline: 1rem; font-size: 14px; }
+.btn-icon { width: var(--btn-h); padding: 0; }
+@media (max-width: 480px) {
+  .btn-lg { --btn-h: 50px; padding-inline: 1.05rem; font-size: var(--text-callout); }
+}
+@media (pointer: coarse), (max-width: 640px) {
+  .btn-sm { --btn-h: var(--target-min); }
+}
+@media (forced-colors: active) {
+  .btn {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+/* ---- Tap target: grows a small control's hit area to 44x44 without changing its
+   look. For small controls that are NOT .glass (glass owns ::before/::after). -- */
+.tap-target { position: relative; }
+.tap-target::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--target-min));
+  height: max(100%, var(--target-min));
+  transform: translate(-50%, -50%);
+}
+
+/* ---- Chips: faux glass pills, no backdrop-filter ------------------------------ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 28px;
+  padding: 0.2rem 0.72rem;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.003em;
+  color: var(--fg-muted);
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--inset-ring),
+    0 0 0 0.5px var(--hairline);
+}
+.chip--accent {
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-ink) 22%, transparent);
+  font-weight: 600;
+}
+/* Dark: a filled, tinted chip with a white label. Accent-coloured text on a dark
+   card measured 4.1:1 where the card overlaps a white screenshot; this holds 7:1+. */
+.dark .chip--accent {
+  color: var(--fg);
+  background: rgb(10 102 230 / 0.4);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), inset 0 0 0 1px rgb(120 180 255 / 0.32);
+}
+.chip--live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--live) 22%, transparent);
+}
+@media (forced-colors: active) {
+  .chip { border: 1px solid CanvasText; }
+}
+
+/* ---- Icon tiles: app-icon squircles. Decorative; never carry text. ---------- */
+.tile {
+  --tile: var(--sys-blue);
+  --tile-size: 40px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border-radius: calc(var(--tile-size) * 0.3);
+  color: #fff;
+  background:
+    radial-gradient(120% 80% at 30% 0%, rgb(255 255 255 / 0.42), transparent 58%),
+    linear-gradient(165deg, color-mix(in oklab, var(--tile) 72%, white), var(--tile) 55%, color-mix(in oklab, var(--tile) 80%, black));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 -1px 1px rgb(0 0 0 / 0.14),
+    0 6px 14px -6px color-mix(in oklab, var(--tile) 70%, transparent);
+}
+.tile--sm { --tile-size: 28px; }
+.tile--lg { --tile-size: 48px; }
+
+/* ---- Inset plate: a nested faux surface inside a card ---------------------- */
+.inset {
+  border-radius: var(--r-inset);
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--inset-ring);
+}
+
+/* ---- Bento: ONE frosted panel subdivided by hairlines, instead of N frosted cards.
+     <LiquidGlass tier="frost" className="bento">
+       <ul className="bento__grid my-cols"> <li className="bento__cell">…</li> … </ul>
+     </LiquidGlass>
+   The section sets grid-template-columns on the grid (per breakpoint). Each cell
+   draws only its top and left hairline; the grid clips the ones on the outer edge,
+   so any column count and any ragged last row work without nth-child rules. The
+   clip lives on the inner grid, not on the glass, so the specular rim survives. */
+.bento {
+  border-radius: var(--r-panel);
+  padding: 0;
+}
+.bento__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.bento__cell {
+  min-width: 0;
+  padding: clamp(20px, 2.4vw, 28px);
+  box-shadow: -1px -1px 0 0 var(--hairline);
+}
+@media (forced-colors: active) {
+  .bento__cell { outline: 1px solid CanvasText; }
+}
+
+/* Content can overhang its column (phone mock-ups, brand glows); clip it at the
+   viewport edge without creating a scroll container. overflow is not a backdrop root. */
+main { overflow-x: clip; }
+
+/* ---- Section frame ------------------------------------------------------------
+   <Section> renders .section > .section__head (eyebrow, title, lead) + .section__body.
+   From 1024px the head is two columns: title left, lead right, bottom-aligned.   */
+.section {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding: 104px 20px 24px;
+  scroll-margin-top: 88px;
+}
+@media (min-width: 640px) {
+  .section { padding: 136px 32px 32px; }
+}
+.section__head { max-width: 46rem; }
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 32px;
+  padding: 0 0.85rem 0 0.3rem;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--fg-muted);
+}
+.eyebrow:not(:has(.eyebrow__no)) { padding-left: 0.85rem; }
+.eyebrow__no {
+  display: grid;
+  place-items: center;
+  height: 24px;
+  min-width: 32px;
+  padding: 0 0.45rem;
+  border-radius: var(--r-pill);
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+.section__title {
+  margin-top: 1.15rem;
+  font-size: var(--text-title);
+  line-height: 1.02;
+  font-weight: 700;
+  letter-spacing: var(--track-title);
+}
+.section__lead {
+  margin-top: 1.1rem;
+  max-width: 40rem;
+  font-size: var(--text-lead);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+}
+@media (min-width: 1024px) {
+  .section__head {
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: 56px;
+    align-items: end;
+  }
+  .section__head > .eyebrow {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .section__head--solo { grid-template-columns: minmax(0, 46rem); }
+  .section__lead {
+    margin-top: 0;
+    max-width: 34rem;
+  }
+}
+.section__body { margin-top: 3rem; }
+@media (min-width: 640px) { .section__body { margin-top: 3.5rem; } }
+
+/* ---- Skip link ------------------------------------------------------------------ */
+.skip-link {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: var(--z-skip);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  transform: translateY(-160%);
+  padding: 0.7rem 1.1rem;
+  border-radius: var(--r-pill);
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.25s var(--ease-out);
+}
+.skip-link:focus-visible {
+  transform: none;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--focus-halo);
+}
+
+/* ---- Switch (<GlassPreference>): role="switch", 44px tall target ------------- */
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  min-height: var(--target-min);
+  padding: 0 0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-inset);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-align: left;
+  cursor: pointer;
+}
+.switch[aria-disabled="true"] { cursor: default; }
+.switch__track {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--r-pill);
+  background: var(--inset);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: background 0.25s ease;
+}
+.switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+.switch[aria-checked="true"] .switch__track { background: var(--live); box-shadow: none; }
+.switch[aria-checked="true"] .switch__thumb { transform: translateX(16px); }
+.switch__note {
+  flex-basis: 100%;
+  padding-left: calc(38px + 0.6rem);
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+}
+.switch:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+@media (forced-colors: active) {
+  .switch__track { border: 1px solid ButtonText; }
+  .switch__thumb { background: ButtonText; }
+  .switch[aria-checked="true"] .switch__track { background: Highlight; }
+}

@@ -1,0 +1,386 @@
+/* ==========================================================================
+   Experience (#experience)                                          layer: sections
+   Owned by the Experience agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   A timeline: a glass rail with one faux node per role, and one frosted role
+   card per role. The card is a small bento (header across the top, then the
+   responsibilities and the stack side by side, split by hairlines), so a
+   single role costs exactly one frost surface.
+   ========================================================================== */
+
+/* Section tokens, scoped to the section root (never :root). */
+.xp {
+  --xp-rail: 34px; /* width of the rail column */
+  --xp-axis: 17px; /* the tube's centre, measured from the column's right edge */
+  --xp-node: 26px; /* the node disc */
+  --xp-node-y: 33px; /* node top: centred on the card's header tile */
+  --xp-foot: 30px; /* the start dot's centre, measured from the bottom */
+  --xp-tube: rgb(var(--accent-rgb) / 0.75);
+  --xp-tube-end: rgb(var(--accent-rgb) / 0.08);
+  --xp-tube-glow: rgb(var(--accent-rgb) / 0.28);
+}
+.dark .xp {
+  --xp-tube: rgb(133 193 255 / 0.7);
+  --xp-tube-end: rgb(133 193 255 / 0.08);
+  --xp-tube-glow: rgb(60 140 255 / 0.4);
+}
+@media (min-width: 640px) {
+  .xp {
+    --xp-rail: 56px;
+    --xp-axis: 26px;
+    --xp-node: 34px;
+    --xp-node-y: 37px;
+  }
+}
+@media (min-width: 1024px) {
+  .xp {
+    --xp-rail: 200px;
+    --xp-axis: 54px;
+    --xp-node: 42px;
+    --xp-node-y: 37px;
+    --xp-foot: 38px;
+  }
+}
+
+.xp-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 28px;
+}
+.xp-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--xp-rail) minmax(0, 1fr);
+}
+
+/* ---- Rail: a time axis ----------------------------------------------------------
+   A thin faux-glass tube (tint, a specular edge, a soft accent glow) runs from the
+   role's end node down to its start dot, fading as it goes back in time. The current
+   role's tube also fades in from above its node: the line runs on into the present.
+   From 1024px the axis is labelled (now, time in role, start date) on the wallpaper;
+   below that the card's own date line carries the same information. */
+.xp-rail {
+  position: relative;
+  grid-column: 1;
+  min-height: 100%;
+}
+.xp-rail__tube {
+  position: absolute;
+  right: calc(var(--xp-axis) - 3px);
+  top: calc(var(--xp-node-y) + var(--xp-node) / 2);
+  bottom: var(--xp-foot);
+  width: 6px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(to bottom, var(--xp-tube), var(--xp-tube-end));
+  box-shadow:
+    inset 1px 0 0 var(--glass-rim-soft),
+    inset -1px 0 0 rgb(var(--glass-tint) / 0.25),
+    0 0 14px -2px var(--xp-tube-glow);
+}
+.xp-item--current .xp-rail__tube {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--xp-tube-end) 0,
+    var(--xp-tube) calc(var(--xp-node-y) + var(--xp-node) / 2),
+    var(--xp-tube-end) 100%
+  );
+}
+.xp-rail__stop {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.xp-rail__stop--end {
+  top: var(--xp-node-y);
+  right: calc(var(--xp-axis) - var(--xp-node) / 2);
+}
+.xp-rail__stop--start {
+  bottom: calc(var(--xp-foot) - 7px);
+  right: calc(var(--xp-axis) - 7px);
+  /* Wider gap, so both labels end on the same line: node / 2 + 14 - dot / 2. */
+  gap: calc(var(--xp-node) / 2 + 7px);
+}
+.xp-node {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--xp-node);
+  height: var(--xp-node);
+}
+.xp-node__core {
+  width: 30%;
+  height: 30%;
+  border-radius: var(--r-pill);
+  background: var(--fg-subtle);
+}
+.xp-item--current .xp-node__core {
+  width: 34%;
+  height: 34%;
+  background: var(--live);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--live) 26%, transparent);
+}
+.xp-rail__dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--glass-tint) / var(--glass-a));
+  box-shadow:
+    inset 0 0 0 2px var(--xp-tube),
+    inset 0 1px 0 var(--glass-rim-soft),
+    0 0 0 0.5px var(--glass-edge);
+}
+
+/* Labels: only where the column is wide enough to hold them. */
+.xp-rail__label,
+.xp-rail__span { display: none; }
+@media (min-width: 1024px) {
+  .xp-rail__label {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+    text-align: right;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+  }
+  .xp-rail__caption {
+    font-size: var(--text-caption);
+    font-weight: 600;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--fg-muted);
+  }
+  /* Time in role: a faux capsule threaded onto the tube, like a bead on the axis.
+     Strong tint, so the line reads as passing behind it. */
+  .xp-rail__span {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: var(--xp-axis);
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 12px;
+    transform: translate(50%, -50%);
+    border-radius: var(--r-pill);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    color: var(--fg);
+    background: rgb(var(--glass-tint) / var(--glass-a-strong));
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim-soft),
+      inset 0 0 0 1px var(--inset-ring),
+      0 0 0 0.5px var(--glass-edge),
+      var(--glass-shadow);
+  }
+}
+
+/* ---- Role card ------------------------------------------------------------------ */
+.xp-card {
+  grid-column: 2;
+  min-width: 0;
+  border-radius: var(--r-panel);
+}
+.xp-card__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "tile status"
+    "who  who";
+  align-items: center;
+  gap: 18px;
+  padding: 22px 22px 22px;
+}
+@media (min-width: 640px) {
+  .xp-card__head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "tile who status";
+    align-items: start;
+    column-gap: 20px;
+    padding: 30px 32px 28px;
+  }
+}
+@media (min-width: 1024px) {
+  .xp-card__head { padding: 34px 38px 30px; }
+}
+.xp-card__tile { grid-area: tile; }
+.xp-card__who { grid-area: who; min-width: 0; }
+.xp-card__status {
+  grid-area: status;
+  justify-self: end;
+  min-height: 28px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg);
+}
+@media (min-width: 640px) {
+  .xp-card__status { margin-top: 2px; }
+}
+.xp-card__company {
+  font-size: clamp(1.3rem, 2vw, var(--text-title-3));
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.032em;
+}
+.xp-card__role {
+  margin-top: 6px;
+  font-size: var(--text-headline);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--track-headline);
+}
+.xp-card__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 5px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.006em;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.xp-card__when svg {
+  flex: none;
+  margin-right: 3px;
+  color: var(--accent-ink);
+}
+.xp-card__len { white-space: nowrap; }
+.xp-card__sep { color: var(--fg-subtle); }
+@media (min-width: 1024px) {
+  /* The labelled axis shows these dates; keep the line for assistive tech. */
+  .xp-card__when {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Body: a two-cell bento inside the one frosted card. The dividers are hairlines
+   on the cells, so the glass rim is never clipped. */
+.xp-card__body {
+  display: grid;
+  border-top: 1px solid var(--hairline);
+}
+@media (min-width: 1024px) {
+  .xp-card__body { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+}
+.xp-card__main,
+.xp-card__aside {
+  min-width: 0;
+  padding: 22px 22px 24px;
+}
+@media (min-width: 640px) {
+  .xp-card__main,
+  .xp-card__aside { padding: 26px 32px 32px; }
+}
+@media (min-width: 1024px) {
+  .xp-card__main,
+  .xp-card__aside { padding: 28px 38px 38px; }
+}
+.xp-card__aside { border-top: 1px solid var(--hairline); }
+@media (min-width: 1024px) {
+  .xp-card__aside {
+    border-top: 0;
+    border-left: 1px solid var(--hairline);
+  }
+}
+.xp-card__label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.xp-points {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.xp-points li {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: -0.006em;
+  color: var(--fg-muted);
+}
+.xp-points__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: var(--r-pill);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.22);
+}
+.xp-term {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.xp-stack {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.xp-stack__chip {
+  min-height: 36px;
+  padding: 0 0.95rem 0 0.3rem;
+  gap: 0.55rem;
+  font-size: 14px;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+/* A round icon disc: concentric with the capsule around it. */
+.xp-stack__tile {
+  --tile-size: 26px;
+  border-radius: var(--r-pill);
+}
+
+/* ---- Modes -------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .xp-rail__tube,
+  .xp-item--current .xp-rail__tube {
+    forced-color-adjust: none;
+    background: CanvasText;
+    box-shadow: none;
+  }
+  .xp-rail__dot { border: 2px solid CanvasText; }
+  .xp-rail__span { border: 1px solid CanvasText; }
+  .xp-node__core,
+  .xp-item--current .xp-node__core {
+    forced-color-adjust: none;
+    background: CanvasText;
+    box-shadow: none;
+  }
+  .xp-points__mark { border: 1px solid CanvasText; }
+}

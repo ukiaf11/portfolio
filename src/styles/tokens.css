@@ -1,0 +1,226 @@
+/* ==========================================================================
+   Tahoe Clear · design tokens                                layer: tokens
+   --------------------------------------------------------------------------
+   One source of truth for both themes. Light is authored first and is not a
+   derivative of dark: every value below was tuned against screenshots and
+   measured contrast, per theme. DESIGN.md documents what each token is for.
+
+   Naming
+     --wp-*       the wallpaper (static gradient mesh behind everything)
+     --fg*        text
+     --accent*    the single restrained accent (Apple system blue family)
+     --sys-*      app-icon tile colours (decorative only, never behind text)
+     --glass-*    the material (consumed by styles/glass.css)
+     --r-*        radii, concentric: inner = outer - inset
+     --text-*     the type ramp; --track-* its letter-spacing
+     --ease-* / --dur-*   motion
+     --z-*        stacking order of the page chrome
+   Legacy aliases at the bottom (--bg, --card, --line, --color-brand-*) keep the
+   sections that have not been migrated yet on the system. Do not use them in
+   new code; they are deleted once nothing references them.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Wallpaper: "Tahoe Day" -------------------------------------------
+     Rgb triplets so each layer can pick its own alpha. --wp-base is mirrored
+     in src/lib/prepaint.js (themeColor) for <meta name="theme-color">. */
+  --wp-base: #e6edf7;
+  --wp-sky: 92 165 255;
+  --wp-lilac: 162 140 255;
+  --wp-peach: 255 164 120;
+  --wp-aqua: 84 214 204;
+  --wp-rose: 255 138 190;
+  --wp-crest: 255 255 255; /* bright wave crests */
+  --wp-deep: 52 108 255; /* the darker wave body */
+  --wp-sky-a: 0.85;
+  --wp-lilac-a: 0.7;
+  --wp-peach-a: 0.62;
+  --wp-aqua-a: 0.6;
+  --wp-rose-a: 0.42;
+  --wp-crest-a: 0.9;
+  --wp-deep-a: 0.24;
+  --wp-grain-a: 0.07;
+
+  /* ---- Text ----------------------------------------------------------------
+     --fg-muted is the floor for body copy on glass and on the wallpaper
+     (measured >= 4.7:1 on the worst wallpaper pixel); never go lighter. */
+  --fg: #0a0c12;
+  --fg-muted: #363c4b;
+  --fg-subtle: #596074; /* 16px+ secondary text and decoration only */
+
+  /* ---- Accent: restrained. Fill for the one primary action, ink for text. */
+  --accent-rgb: 0 88 200;
+  --accent-fill: #0058c8;
+  --accent-ink: #004ea6;
+  --on-accent: #ffffff;
+  --accent-soft: rgb(0 88 200 / 0.09);
+
+  /* System colours for app-icon tiles (decorative, never carry text). */
+  --sys-blue: #0a7cff;
+  --sys-indigo: #5856d6;
+  --sys-teal: #1ea6c4;
+  --sys-green: #28b34d;
+  --sys-orange: #ff8a00;
+  --sys-pink: #ff2d62;
+  --sys-purple: #a64fe0;
+  --live: #12a150;
+
+  /* ---- Material ------------------------------------------------------------ */
+  --glass-tint: 255 255 255;
+  --glass-a: 0.56; /* faux (no blur): chips, insets */
+  --glass-a-frost: 0.52; /* frosted panels over the wallpaper */
+  --glass-a-strong: 0.84; /* sheets and cards that float over busy content */
+  --glass-a-legible: 0.78; /* text panels over screenshots (with contrast(.7) behind) */
+  --glass-a-refract: 0.56; /* floating chrome (nav capsule, toggle): content scrolls under it */
+  --glass-a-rimzone: 0.3; /* refracting capsules: tint at the rims, where only the lens is */
+  --glass-a-solid: 0.95;
+  --glass-a-clear: 0.14;
+  --glass-fg: var(--fg);
+  --glass-rim: rgb(255 255 255 / 1); /* specular hot spot, top-left */
+  --glass-rim-soft: rgb(255 255 255 / 0.6); /* counter-highlight, bottom-right */
+  --glass-rim-base: rgb(255 255 255 / 0.5); /* 1px ring all the way round */
+  --glass-edge: rgb(20 36 72 / 0.12); /* darkened outer edge (iOS 27) */
+  --glass-sheen: rgb(255 255 255 / 0.7);
+  --glass-shadow: 0 1px 1px rgb(20 36 72 / 0.05), 0 12px 32px -14px rgb(30 52 110 / 0.35);
+  --glass-refract-tone: saturate(170%) brightness(1.06); /* read ONLY by the Chromium refraction path */
+  --hairline: rgb(18 30 60 / 0.1);
+  --inset: rgb(255 255 255 / 0.5); /* nested faux plate inside a card */
+  --inset-ring: rgb(255 255 255 / 0.75);
+
+  --focus-ring: #004ea6;
+  --focus-halo: #ffffff;
+
+  /* ---- Shape: concentric. A nested corner is its parent's minus the gap. -- */
+  --r-panel: 32px; /* frosted panels and widgets, the mobile sheet */
+  --r-card: 26px; /* standalone cards, screenshot windows */
+  --r-nested: 22px; /* rows and plates inside a panel with 10px padding (32 - 10) */
+  --r-inset: 18px; /* inset plates inside a card with generous padding */
+  --r-tile: 12px; /* small tiles and thumbnails */
+  --r-pill: 999px; /* every control: buttons, chips, capsules */
+
+  /* ---- Type: Inter with optical sizing. Weights 400-700 (800 reserved). --- */
+  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-display: clamp(3.4rem, 8.6vw, 7.25rem); /* the hero name. 700 / 0.94 */
+  --text-title: clamp(2.15rem, 4.6vw, 3.6rem); /* section titles (h2). 700 / 1.02 */
+  --text-title-2: clamp(1.65rem, 2.5vw, 2.1rem); /* feature card names. 700 / 1.08 */
+  --text-title-3: 24px; /* widget and panel titles. 700 / 1.12 */
+  --text-lead: clamp(1.02rem, 1.25vw, 1.2rem); /* section leads, intro copy. 400 / 1.55 */
+  --text-headline: 17px; /* card titles, taglines. 600-650 / 1.25 */
+  --text-body: 16px; /* running text on the wallpaper. 400 / 1.6 */
+  --text-callout: 15px; /* buttons, list labels. 500-600 */
+  --text-subhead: 14.5px; /* body copy inside cards. 400 / 1.55-1.62 */
+  --text-footnote: 13px; /* meta, hostnames, footnotes */
+  --text-caption: 12px; /* uppercase labels (+ --track-caps), badges */
+  --track-display: -0.052em;
+  --track-title: -0.038em;
+  --track-headline: -0.022em;
+  --track-caps: 0.07em;
+
+  /* ---- Motion ----------------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* entrances, reveals */
+  --ease-gel: cubic-bezier(0.3, 1.45, 0.5, 1); /* springy press and morph (overshoots) */
+  --ease-lead: cubic-bezier(0.2, 0.9, 0.25, 1.12); /* liquid indicator: leading edge */
+  --ease-trail: cubic-bezier(0.55, 0, 0.2, 1); /* liquid indicator: trailing edge */
+  --dur-press: 110ms; /* press-in */
+  --dur-gel: 300ms; /* hover/press release */
+  --dur-morph: 550ms; /* icon swaps, sheet open, width morphs */
+  --dur-reveal: 900ms; /* scroll reveal */
+  --reveal-lift: 26px;
+
+  /* ---- Layout and interaction ------------------------------------------------- */
+  --page-max: 1280px; /* content width of every section */
+  --target-min: 44px; /* smallest touch target (Apple HIG 44pt) */
+  --z-wallpaper: -10;
+  --z-sheet: 45;
+  --z-header: 50;
+  --z-skip: 70;
+
+  /* ---- Legacy aliases: unmigrated sections read these. Not for new code. ---- */
+  --bg: var(--wp-base);
+  --bg-soft: #f7f9fd; /* opaque sheets (services wireframes) */
+  --line: rgb(18 30 60 / 0.11);
+  --card: rgb(var(--glass-tint) / var(--glass-a-frost));
+  --card-hover: rgb(var(--glass-tint) / 0.7);
+  --glow-a: rgb(92 165 255 / 0.55);
+  --color-brand-400: #004ea6;
+  --color-teal-400: #0b766b;
+  --grad-a: #0a0c12;
+  --grad-b: #004ea6;
+  --grad-c: #4a3fc4;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* ---- Wallpaper: "Tahoe Night" --------------------------------------------- */
+  --wp-base: #050814;
+  --wp-sky: 30 84 230;
+  --wp-lilac: 112 56 230;
+  --wp-peach: 232 92 60;
+  --wp-aqua: 12 150 170;
+  --wp-rose: 200 36 120;
+  --wp-crest: 150 196 255;
+  --wp-deep: 36 70 200;
+  --wp-sky-a: 0.7;
+  --wp-lilac-a: 0.62;
+  --wp-peach-a: 0.4;
+  --wp-aqua-a: 0.55;
+  --wp-rose-a: 0.42;
+  --wp-crest-a: 0.24;
+  --wp-deep-a: 0.4;
+  --wp-grain-a: 0.09;
+
+  --fg: #f4f6fb;
+  --fg-muted: #c9d0dc;
+  --fg-subtle: #9aa3b6;
+
+  --accent-rgb: 10 102 230;
+  --accent-fill: #0a66e6;
+  --accent-ink: #85c1ff;
+  --on-accent: #ffffff;
+  --accent-soft: rgb(80 160 255 / 0.16);
+
+  --sys-blue: #0a84ff;
+  --sys-indigo: #5e5ce6;
+  --sys-teal: #30b0c7;
+  --sys-green: #30d158;
+  --sys-orange: #ff9f0a;
+  --sys-pink: #ff375f;
+  --sys-purple: #bf5af2;
+  --live: #30d158;
+
+  --glass-tint: 26 31 48;
+  --glass-a: 0.5;
+  --glass-a-frost: 0.5;
+  --glass-a-strong: 0.82;
+  --glass-a-legible: 0.8;
+  --glass-a-refract: 0.66; /* floating chrome: arbitrary content scrolls under it */
+  --glass-a-rimzone: 0.34;
+  --glass-a-solid: 0.95;
+  --glass-a-clear: 0.2;
+  --glass-rim: rgb(255 255 255 / 0.62);
+  --glass-rim-soft: rgb(255 255 255 / 0.22);
+  --glass-rim-base: rgb(255 255 255 / 0.1);
+  --glass-edge: rgb(0 0 0 / 0.55);
+  --glass-sheen: rgb(255 255 255 / 0.1);
+  --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 16px 40px -16px rgb(0 0 0 / 0.75);
+  --glass-refract-tone: saturate(150%) brightness(0.86);
+  --hairline: rgb(255 255 255 / 0.09);
+  --inset: rgb(255 255 255 / 0.06);
+  --inset-ring: rgb(255 255 255 / 0.1);
+
+  --focus-ring: #8cc6ff;
+  --focus-halo: #050814;
+
+  --bg-soft: #0e1322;
+  --line: rgb(255 255 255 / 0.1);
+  --card-hover: rgb(var(--glass-tint) / 0.62);
+  --glow-a: rgb(30 84 230 / 0.6);
+  --color-brand-400: #85c1ff;
+  --color-teal-400: #5fe0cf;
+  --grad-a: #f4f6fb;
+  --grad-b: #8cc4ff;
+  --grad-c: #b7a8ff;
+}

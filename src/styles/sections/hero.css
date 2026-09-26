@@ -1,0 +1,461 @@
+/* ==========================================================================
+   Hero (#top)                                                  layer: sections
+   Owned by the Hero agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Glass here: the "View my work" CTA (refract, 1 of the 3), the two stage
+   widgets (frost, legible variant because they overlap screenshots). Every
+   other surface is faux. The stage's screenshots are static; a few pixels
+   of pointer parallax on fine pointers only (Hero.jsx), none under reduced
+   motion.
+   ========================================================================== */
+
+/* Section tokens: the screenshot window and the phone bezel. */
+.hero-stage {
+  --shot-ring: rgb(20 36 72 / 0.16);
+  --shot-shadow: rgb(30 52 110 / 0.42);
+  --bezel: rgb(255 255 255 / 0.66);
+  --bezel-ring: rgb(20 36 72 / 0.12);
+  --shot-contact: rgb(0 0 0 / 0.06); /* the tight contact shadow under the window */
+  --shot-spec: rgb(255 255 255 / 0.38); /* specular top edge of the window */
+  --bezel-spec: rgb(255 255 255 / 0.6); /* specular top edge of the phone bezel */
+  --glow-a: 0.42;
+}
+.dark .hero-stage {
+  --shot-ring: rgb(255 255 255 / 0.16);
+  --shot-shadow: rgb(0 0 0 / 0.8);
+  --bezel: rgb(58 64 88 / 0.78);
+  --bezel-ring: rgb(255 255 255 / 0.14);
+  --glow-a: 0.34;
+}
+
+.hero {
+  position: relative;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 92px 20px 8px;
+}
+@media (min-width: 640px) {
+  .hero { padding: 124px 32px 24px; }
+}
+@media (min-width: 1024px) {
+  .hero {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 112px 32px 56px;
+  }
+}
+.hero__grid {
+  display: grid;
+  gap: 40px;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .hero__grid {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 1fr);
+    gap: 40px;
+  }
+}
+
+/* ---- Copy ------------------------------------------------------------------ */
+.hero__status { font-weight: 600; color: var(--fg); }
+.hero__title {
+  margin-top: 22px;
+}
+@media (min-width: 640px) {
+  .hero__title { margin-top: 26px; }
+}
+.hero__title-2 {
+  /* A quiet luminous fall-off, not a rainbow: the accent stays restrained.
+     Inline (not a block) so the whole name is one text block; see Hero.jsx. */
+  padding-bottom: 0.08em;
+  background: linear-gradient(
+    176deg,
+    var(--fg) 18%,
+    color-mix(in oklab, var(--fg) 62%, var(--accent-ink)) 96%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .hero__title-2 { color: CanvasText; background: none; }
+}
+
+/* The roles, static. A wrapping row with dot separators; the clip hides the dot
+   that would otherwise start a wrapped line (each dot sits in the gap BEFORE its
+   role, so a line's first dot falls outside the list box). overflow is not a
+   backdrop root, and nothing inside is glass. */
+.hero__roles {
+  --sep: 26px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 2px;
+  column-gap: var(--sep);
+  max-width: 36rem;
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.014em;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .hero__roles { margin-top: 24px; font-size: clamp(1rem, 1.35vw, 1.16rem); --sep: 30px; }
+}
+.hero__role {
+  position: relative;
+  white-space: nowrap;
+}
+.hero__role::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(var(--sep) / -2 - 2px);
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: var(--r-pill);
+  background: currentColor;
+  opacity: 0.6;
+}
+.hero__role--lead { color: var(--fg); }
+
+.hero__lead {
+  margin-top: 16px;
+  max-width: 35rem;
+  font-size: clamp(1.02rem, 1.3vw, 1.2rem);
+  line-height: 1.55;
+  letter-spacing: -0.014em;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .hero__lead { margin-top: 18px; }
+}
+.hero__lead strong { color: var(--fg); font-weight: 600; }
+
+.hero__actions {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .hero__actions { margin-top: 32px; }
+}
+@media (max-width: 480px) {
+  .hero__actions { gap: 10px; }
+  .hero__actions > .btn:not(.btn-icon) { flex: 1 1 auto; padding-inline: 0.95rem; }
+  .hero__actions > .btn-icon { flex: none; }
+  .hero__actions svg:not(.lucide-github) { display: none; }
+}
+
+/* Contact meta: every link is a 44px-tall target (the row itself is the spacing). */
+.hero__meta {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .hero__meta { margin-top: 16px; }
+}
+.hero__meta li,
+.hero__meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: inherit;
+  text-decoration: none;
+}
+.hero__meta a { min-height: var(--target-min); border-radius: var(--r-tile); }
+.hero__meta svg { color: var(--accent-ink); flex: none; }
+@media (hover: hover) {
+  .hero__meta a:hover { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
+}
+
+/* ---- The depth stage ------------------------------------------------------------
+   Back planes: the window, pinned to the stage's right edge, and the phone, whose
+   right edge tucks over the window's left edge. The widgets are in flow below a
+   padding-top that reserves the window's upper part, so they overlap its lower edge
+   and the stage's height follows their content. Mobile first.
+
+   Largest contentful paint: the window is sized to stay well under the largest
+   TEXT block at every width (the lead on phones and tablets, the name on desktop),
+   so a decorative screenshot never becomes the LCP. That is why it is capped in px
+   below 1024 and why it is 68% of the stage above. Measured 360 to 1920.        */
+.hero-stage {
+  --win-w: min(63%, 212px);
+  --win-top: 56px;
+  --phone-w: min(30%, 108px);
+  --phone-top: 40px;
+  --tuck: 18px; /* how far the phone overlaps the window's left edge */
+  --overlap: 3px; /* how far the widgets climb up over the window's bottom edge */
+  position: relative;
+  z-index: 0;
+  padding-top: calc(var(--win-top) + var(--win-w) * 0.625 - var(--overlap));
+}
+@media (min-width: 640px) {
+  .hero-stage {
+    --win-w: 236px;
+    --win-top: 8px;
+    --phone-w: 104px;
+    --phone-top: 0px;
+    --tuck: 26px;
+    --overlap: 36px;
+  }
+}
+@media (min-width: 1024px) {
+  .hero-stage {
+    --win-w: 68%;
+    --win-top: 26px;
+    --phone-w: 25%;
+    --phone-top: 20%;
+    --tuck: 2.4%;
+    --overlap: 13%;
+  }
+}
+
+/* A soft pool of the window's own brand colour on the wallpaper under the scene. */
+.hero-stage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 2%;
+  right: -6%;
+  width: 92%;
+  aspect-ratio: 1.3;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--site, var(--sys-orange)) 60%, transparent), transparent);
+  opacity: var(--glow-a);
+  pointer-events: none;
+}
+@media (forced-colors: active) {
+  .hero-stage::before { display: none; }
+}
+
+/* The proof chip: a faux capsule link (strong alpha, since it straddles a screenshot). */
+.hero-stage__live {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--target-min);
+  padding: 0 16px 0 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--fg);
+}
+.hero-stage__live svg { flex: none; color: var(--accent-ink); }
+@media (min-width: 1024px) {
+  .hero-stage__live { left: 6%; min-height: 40px; }
+}
+@media (min-width: 1024px) and (pointer: coarse) {
+  .hero-stage__live { min-height: var(--target-min); }
+}
+.hero-stage__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--live) 24%, transparent);
+}
+
+/* The desktop window: borderless, like the Work section's, with a ring and a
+   specular top edge so a dark capture never dissolves into a dark wallpaper. */
+.hero-stage__window {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  margin-top: var(--win-top); /* a margin, so a % reads the stage WIDTH */
+  width: var(--win-w);
+  border-radius: var(--r-tile);
+  transform: translate3d(calc(var(--px, 0) * -7px), calc(var(--py, 0) * -5px), 0);
+  transition: transform 1.4s var(--ease-out);
+}
+.hero-stage__window img,
+.hero-stage__phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+  background: var(--bg-soft);
+}
+.hero-stage__window img {
+  aspect-ratio: 16 / 10;
+  box-shadow:
+    0 0 0 1px var(--shot-ring),
+    0 2px 4px var(--shot-contact),
+    0 36px 70px -30px var(--shot-shadow);
+}
+.hero-stage__window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 var(--shot-spec);
+}
+@media (min-width: 640px) {
+  .hero-stage__window { border-radius: var(--r-inset); }
+}
+
+/* The phone: the capture in a thin glass bezel, in front of the window. */
+.hero-stage__phone {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: calc(var(--win-w) - var(--tuck));
+  margin-top: var(--phone-top); /* % of the stage width, like the window */
+  width: var(--phone-w);
+  padding: 3px;
+  border-radius: var(--r-tile);
+  background: var(--bezel);
+  box-shadow:
+    inset 0 1px 0 var(--bezel-spec),
+    inset 0 0 0 1px var(--bezel-ring),
+    0 0 0 0.5px var(--glass-edge),
+    0 28px 56px -22px var(--shot-shadow);
+  transform: translate3d(calc(var(--px, 0) * -13px), calc(var(--py, 0) * -9px), 0);
+  transition: transform 1.4s var(--ease-out);
+}
+.hero-stage__phone img {
+  aspect-ratio: 390 / 844;
+  border-radius: calc(var(--r-tile) - 3px);
+}
+@media (min-width: 640px) {
+  .hero-stage__phone { padding: 4px; border-radius: var(--r-inset); }
+  .hero-stage__phone img { border-radius: calc(var(--r-inset) - 4px); }
+}
+@media (forced-colors: active) {
+  .hero-stage__window img,
+  .hero-stage__phone { border: 1px solid CanvasText; }
+}
+
+/* Front: the widgets, in flow, over the lower edge of the window and the phone. */
+.hero-stage__widgets {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hero-stage__widgets {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    align-items: stretch;
+    gap: 14px;
+  }
+}
+@media (min-width: 1024px) {
+  .hero-stage__widgets {
+    gap: 14px;
+    margin-left: 21%;
+  }
+}
+
+.widget {
+  padding: 18px;
+  border-radius: var(--r-panel);
+}
+@media (min-width: 640px) {
+  .widget { padding: 22px; }
+}
+.widget__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.widget__kicker {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+}
+.widget__live { margin-left: auto; min-height: 26px; font-size: 12px; font-weight: 600; color: var(--fg); }
+.widget__title {
+  margin-top: 14px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+.widget__sub { margin-top: 5px; font-size: 14.5px; font-weight: 500; letter-spacing: -0.01em; }
+.widget__meta { margin-top: 8px; font-size: 13.5px; color: var(--fg-muted); }
+@media (min-width: 640px) {
+  .widget__title { margin-top: 18px; font-size: var(--text-title-3); letter-spacing: -0.032em; }
+  .widget__sub { margin-top: 6px; font-size: 15px; }
+  .widget__meta { margin-top: 12px; }
+}
+
+.widget--stats { padding: 8px; }
+@media (min-width: 640px) {
+  .widget--stats { padding: 10px; }
+}
+.stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  height: 100%;
+}
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 5px;
+  padding: 13px 14px 12px;
+  border-radius: calc(var(--r-panel) - 8px); /* concentric: widget 32 - padding 8 */
+}
+@media (min-width: 640px) {
+  .stat {
+    gap: 6px;
+    padding: 16px 16px 15px;
+    border-radius: var(--r-nested); /* concentric: widget 32 - padding 10 */
+  }
+}
+.stat__value {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+.stat__label {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--fg-muted);
+}
+
+/* Motion: the parallax is a transform with a long ease; reduced motion never
+   sets --px/--py (Hero.jsx), and this makes sure nothing transitions either. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-stage__window,
+  .hero-stage__phone {
+    transform: none;
+    transition: none;
+  }
+}

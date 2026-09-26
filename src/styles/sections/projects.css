@@ -1,0 +1,283 @@
+/* ==========================================================================
+   Projects (#projects)                                                  layer: sections
+   Owned by the Projects agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Anatomy (2 frost surfaces for the whole section, at any viewport):
+     .projects-feature   frost panel: the featured case, wide, highlights in 2 columns
+     .projects-grid      ONE frost bento: the other cases, one hairline cell each
+     .projects-more      faux capsule card: the GitHub link
+   ========================================================================== */
+
+/* Section tokens, scoped to the section root. */
+.projects {
+  --projects-ghost: color-mix(in oklab, var(--fg) 9%, transparent);
+  --projects-dot: color-mix(in oklab, var(--accent-ink) 70%, transparent);
+  --projects-graphite: #2a2f3b; /* the GitHub tile: graphite, not a system colour */
+}
+.dark .projects {
+  --projects-ghost: color-mix(in oklab, var(--fg) 8%, transparent);
+  --projects-graphite: #4a5263;
+}
+
+.projects {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .projects { gap: 20px; }
+}
+
+/* ---- Shared parts --------------------------------------------------------- */
+
+/* The engraved ordinal. Pseudo-element text with an empty alt, so it is neither read
+   out nor measured as body text: it is decoration, like the tiles. */
+.projects-ordinal {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  pointer-events: none;
+  user-select: none;
+}
+.projects-ordinal::before {
+  content: attr(data-no);
+  content: attr(data-no) / "";
+  display: block;
+  font-size: 72px;
+  font-weight: 700;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  background: linear-gradient(180deg, var(--projects-ghost), transparent 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.projects-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.projects-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.projects-points li {
+  position: relative;
+  padding-left: 18px;
+  font-size: var(--text-subhead);
+  line-height: 1.58;
+  letter-spacing: -0.006em;
+  color: var(--fg-muted);
+}
+/* A small accent bead, centred on the first line. */
+.projects-points li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: calc(0.79em - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--projects-dot);
+}
+
+.projects-stack {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---- Featured case -------------------------------------------------------- */
+.projects-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 26px;
+  border-radius: var(--r-panel);
+}
+@media (min-width: 640px) {
+  .projects-feature { padding: 36px; }
+}
+.projects-feature .projects-ordinal { top: 24px; right: 28px; }
+.projects-feature .projects-ordinal::before { font-size: clamp(76px, 9vw, 124px); }
+@media (min-width: 640px) {
+  .projects-feature .projects-ordinal { top: 30px; right: 36px; }
+}
+
+.projects-feature__marks {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.projects-badge { gap: 5px; }
+.projects-badge svg { fill: currentColor; }
+
+.projects-feature__name {
+  margin-top: 22px;
+  max-width: 24ch;
+  font-size: var(--text-title-2);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.projects-feature__tagline {
+  margin-top: 12px;
+  max-width: 46ch;
+  font-size: var(--text-headline);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.016em;
+}
+
+.projects-feature__body {
+  margin-top: 26px;
+  padding-top: 24px;
+  box-shadow: inset 0 1px 0 var(--hairline);
+}
+.projects-feature__body .projects-points { margin-top: 14px; gap: 12px; }
+
+.projects-feature__stack { margin-top: 26px; }
+.projects-feature__stack .projects-stack { margin-top: 12px; }
+
+@media (min-width: 880px) {
+  .projects-points--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 40px;
+    row-gap: 14px;
+  }
+}
+
+/* Wide: identity on the left, the stack on the right, highlights across the width. */
+@media (min-width: 1024px) {
+  .projects-feature {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      "intro stack"
+      "body  body";
+    column-gap: 56px;
+    padding: 40px 44px 42px;
+  }
+  .projects-feature__intro { grid-area: intro; }
+  .projects-feature__stack {
+    grid-area: stack;
+    align-self: end;
+    margin-top: 0;
+  }
+  .projects-feature__stack .projects-label { text-align: right; }
+  .projects-feature__stack .projects-stack { justify-content: flex-end; }
+  .projects-feature__body { grid-area: body; margin-top: 30px; padding-top: 28px; }
+  .projects-points--two { column-gap: 56px; }
+}
+
+/* ---- The other cases: one frost bento ------------------------------------- */
+@media (min-width: 768px) {
+  .projects-grid__cells { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.projects-case {
+  display: flex;
+  padding: 26px;
+}
+@media (min-width: 640px) {
+  .projects-case { padding: 32px 34px 34px; }
+}
+.projects-case__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.projects-case .projects-ordinal { top: -4px; right: -6px; }
+.projects-case__name {
+  margin-top: 20px;
+  max-width: 26ch;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.22;
+  letter-spacing: -0.024em;
+}
+.projects-case__tagline {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.projects-case .projects-points { margin-top: 16px; }
+/* The stack sits on the floor of the cell, so a row of cells ends on one line. */
+.projects-case .projects-stack { margin-top: auto; padding-top: 22px; }
+
+/* ---- More on GitHub: a faux capsule card ----------------------------------- */
+.projects-more {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 80px;
+  padding: 14px 16px 14px 16px;
+  border-radius: var(--r-card);
+  color: var(--fg);
+  text-decoration: none;
+}
+.projects-more__tile { --tile: var(--projects-graphite); }
+.projects-more__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.projects-more__title {
+  font-size: var(--text-headline);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: var(--track-headline);
+}
+.projects-more__host {
+  font-size: 14px;
+  color: var(--fg-muted);
+  overflow-wrap: anywhere;
+}
+.projects-more__go {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  color: var(--accent-ink);
+  background: var(--inset);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim-soft),
+    inset 0 0 0 1px var(--inset-ring);
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+/* The card is wide, so the shared gel press (scale .96 / 1.03) would lurch; keep it small. */
+.projects-more.glass-interactive:active { transform: scale(0.99); }
+@media (hover: hover) {
+  .projects-more.glass-interactive:hover { transform: translateY(-2px); }
+  .projects-more:hover .projects-more__go { transform: translate(2px, -2px); }
+}
+
+/* ---- Modes ---------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .projects-more.glass-interactive:hover,
+  .projects-more.glass-interactive:active,
+  .projects-more:hover .projects-more__go { transform: none; }
+}
+@media (forced-colors: active) {
+  .projects-ordinal { display: none; }
+  .projects-points li::before { background: CanvasText; }
+  .projects-feature__body { border-top: 1px solid CanvasText; box-shadow: none; }
+  .projects-more__go { border: 1px solid CanvasText; }
+  .projects-more { color: LinkText; }
+}

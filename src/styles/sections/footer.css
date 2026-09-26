@@ -1,0 +1,158 @@
+/* ==========================================================================
+   Footer (.site-footer, both pages)                        layer: sections
+   Owned by the Footer agent. A bottom toolbar that answers the floating one
+   at the top: ONE frosted bar (a full capsule from 1180px) with faux capsule
+   controls inside, so the footer costs a single backdrop-filter pass.
+   No backdrop-filter in this file: use a glass tier. <GlassPreference> is
+   styled by .switch in ui.css and adjusted in context here.
+
+   Grid areas move only the credits (nothing focusable in them), so the focus
+   order is the DOM order on every layout: GitHub, Email, switch, Back to top.
+     < 640     links / pref / credit / top            (one column)
+     640-1179  links . pref top / credit              (controls, then credits)
+     >= 1180   credit links pref top                  (one row, a capsule)
+   ========================================================================== */
+
+.site-footer {
+  max-width: var(--page-max);
+  margin: 56px auto 0;
+  padding: 0 20px 20px;
+}
+@media (min-width: 640px) {
+  .site-footer { margin-top: 72px; padding: 0 32px 32px; }
+}
+
+.footer-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "links"
+    "pref"
+    "credit"
+    "top";
+  align-items: center;
+  border-radius: var(--r-panel);
+  padding: 10px; /* concentric: 32 - 10 = the 22px of anything cornered inside */
+}
+.footer-links { grid-area: links; }
+.footer-pref { grid-area: pref; }
+.footer-credit { grid-area: credit; }
+.footer-top { grid-area: top; }
+
+/* ---- Capsule controls (faux, 44px) ------------------------------------------------ */
+.footer-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.footer-btn {
+  --btn-h: var(--target-min);
+  width: 100%;
+  padding-inline: 1rem 1.15rem;
+  gap: 0.45rem;
+  font-size: 14.5px;
+}
+.footer-btn__out {
+  margin-left: -2px;
+  opacity: 0.6;
+}
+
+/* ---- The switch ----------------------------------------------------------------------- */
+.footer-pref {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.footer-switch {
+  font-size: var(--text-footnote);
+  color: var(--fg-muted);
+}
+
+/* ---- Credits -------------------------------------------------------------------------- */
+.footer-credit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--text-footnote);
+  line-height: 1.4;
+  color: var(--fg-muted);
+}
+.footer-credit__copy { font-variant-numeric: tabular-nums; }
+.footer-credit__built {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.footer-credit__built > span:first-child { margin-right: 2px; }
+.footer-chip {
+  min-height: 24px;
+  padding-inline: 0.6rem;
+  font-size: 12px;
+}
+
+/* ---- Phones: one column, hairlines between the groups --------------------------------- */
+@media (max-width: 639px) {
+  .footer-pref {
+    margin: 10px 4px 0;
+    padding: 4px 0;
+    border-block: 1px solid var(--hairline);
+  }
+  .footer-switch { width: 100%; }
+  .footer-credit { padding: 16px 12px 14px; }
+}
+
+/* ---- Tablet and small desktop: controls row, then the credits -------------------------- */
+@media (min-width: 640px) {
+  .footer-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "links . pref top"
+      "credit credit credit credit";
+    column-gap: 12px;
+  }
+  .footer-links { display: flex; }
+  .footer-btn { width: auto; }
+  .footer-pref { padding-inline: 8px 4px; }
+  .footer-credit {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin: 10px 8px 0;
+    padding: 12px 6px 6px;
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+/* ---- Wide: one row, and the bar becomes a capsule like the toolbar at the top ---------- */
+@media (min-width: 1180px) {
+  .footer-bar {
+    --glass-light: 180deg; /* capsule lighting, as .glass-capsule */
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "credit links pref top";
+    column-gap: 14px;
+    border-radius: var(--r-pill);
+    padding: 12px;
+  }
+  .footer-credit {
+    margin: 0;
+    padding: 0 0 0 16px;
+    border-top: 0;
+  }
+  .footer-pref {
+    padding-inline: 14px 10px;
+    border-inline: 1px solid var(--hairline);
+    align-self: stretch;
+  }
+}
+
+@media (forced-colors: active) {
+  .footer-pref,
+  .footer-credit { border-color: CanvasText; }
+}

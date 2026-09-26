@@ -1,0 +1,67 @@
+/* ==========================================================================
+   DEPRECATED · classes the unmigrated sections still use    layer: components
+   --------------------------------------------------------------------------
+   Do NOT use these in new or migrated code. They exist so the sections that
+   have not been rebuilt yet keep rendering on the new system:
+
+     .surface        -> <LiquidGlass tier="frost"> (or tier="faux" for small things)
+     .card-glow      -> nothing; the glass rim is the edge light
+     .gradient-text  -> plain --fg text; accent only in --accent-ink, sparingly
+
+   When a section migrates, remove these class names from its markup. This file
+   is deleted in the integration pass once `grep -rn "surface\|card-glow\|gradient-text" src`
+   finds no users. Section agents: do not edit it.
+   ========================================================================== */
+
+/* The legacy card, re-pointed at the frosted tier. Literal backdrop-filter values
+   (WebKit bugs 297620 / 289800); the rim is box-shadow so it cannot collide with
+   .card-glow's ::before. */
+.surface {
+  background-color: var(--card);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow:
+    inset 1px 1px 0 var(--glass-rim-soft),
+    inset -1px -1px 0 color-mix(in oklab, var(--glass-rim-soft) 50%, transparent),
+    0 0 0 0.5px var(--glass-edge),
+    var(--glass-shadow);
+  -webkit-backdrop-filter: blur(22px) saturate(180%) brightness(1.06);
+  backdrop-filter: blur(22px) saturate(180%) brightness(1.06);
+}
+.dark .surface {
+  -webkit-backdrop-filter: blur(22px) saturate(160%) brightness(0.82);
+  backdrop-filter: blur(22px) saturate(160%) brightness(0.82);
+}
+
+.gradient-text {
+  background-image: linear-gradient(115deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+@media (forced-colors: active) {
+  .gradient-text { color: CanvasText; background: none; }
+}
+
+/* Hairline gradient border that lights up on hover. */
+.card-glow {
+  position: relative;
+  isolation: isolate;
+}
+.card-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, var(--glass-rim), transparent 40%, transparent 60%, var(--grad-b));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.card-glow:hover::before { opacity: 0.85; }

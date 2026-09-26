@@ -1,0 +1,155 @@
+/* ==========================================================================
+   About (#about)                                                  layer: sections
+   Owned by the About agent. Only this section's classes live here; shared
+   primitives are in styles/ui.css and the material in styles/glass.css
+   (read-only for section agents). No backdrop-filter in this file: use a
+   glass tier. See DESIGN.md.
+
+   Glass here: two frost panels (the story, and one bento holding the four
+   pillars). The Focus list and the icon tiles inside them are faux.
+   ========================================================================== */
+
+.about {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 640px) {
+  .about { gap: 18px; }
+}
+
+/* ---- The story -------------------------------------------------------------- */
+.about__story {
+  padding: 22px;
+  border-radius: var(--r-panel);
+}
+@media (min-width: 640px) {
+  .about__story { padding: 34px; }
+}
+/* Wide screens: the story reads on the left at a comfortable measure, the Focus
+   list sits beside it as a spec sheet. */
+@media (min-width: 1024px) {
+  .about__story {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    column-gap: clamp(32px, 4vw, 56px);
+    align-items: center;
+    padding: 38px 40px 40px;
+  }
+}
+.about__lede {
+  font-size: clamp(1.04rem, 1.3vw, 1.2rem);
+  font-weight: 450;
+  line-height: 1.58;
+  letter-spacing: -0.016em;
+}
+/* The Focus list: an inset grouped list, as in Settings. */
+.about-focus {
+  margin-top: 22px;
+  padding: 2px 0 4px;
+  border-radius: var(--r-inset);
+}
+@media (min-width: 640px) {
+  .about-focus { margin-top: 28px; padding: 4px 0; }
+}
+@media (min-width: 1024px) {
+  .about-focus { margin-top: 0; }
+}
+.about-focus__title {
+  padding: 12px 16px 4px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .about-focus__title { padding-inline: 18px; }
+}
+.about-focus__list { margin: 0; }
+.about-focus__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 8px 18px;
+}
+.about-focus__row + .about-focus__row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 58px; /* inset separator: starts at the text, not the tile */
+  right: 0;
+  height: 1px;
+  background: var(--hairline);
+}
+.about-focus__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+.about-focus__value {
+  margin: 0;
+  font-size: 14px;
+  text-align: right;
+  color: var(--fg-muted);
+}
+/* Phones: the value tucks under its label, aligned with the label's text. */
+@media (max-width: 480px) {
+  .about-focus__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    min-height: 0;
+    padding: 10px 16px;
+  }
+  .about-focus__row + .about-focus__row::before { left: 56px; }
+  .about-focus__value { padding-left: 40px; font-size: 13.5px; text-align: left; }
+}
+
+/* ---- The pillars: one bento panel ------------------------------------------------ */
+@media (min-width: 640px) {
+  .about__pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) {
+  .about__pillars { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.about-pillar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  padding: 20px 22px 22px;
+}
+.about-pillar__tile { --tile-size: 30px; }
+.about-pillar__tile svg { width: 16px; height: 16px; }
+.about-pillar__title {
+  font-size: var(--text-headline);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: var(--track-headline);
+}
+.about-pillar__body {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  font-size: var(--text-subhead);
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+/* From 640px each cell is a small card: the tile on top, then the words. */
+@media (min-width: 640px) {
+  .about-pillar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 26px 28px 28px;
+  }
+  .about-pillar__tile { --tile-size: 40px; }
+  .about-pillar__tile svg { width: 19px; height: 19px; }
+  .about-pillar__title { margin-top: 18px; }
+  .about-pillar__body { margin-top: 8px; }
+}
