@@ -139,11 +139,12 @@ function ServiceRow({ service, index, total }) {
         <div className="svc-proof">
           <h4 className="svc-label">Already built</h4>
           <p className="svc-proof__text">{service.proof}</p>
-          {/* The projects live on the home page, so the link is absolute: "#projects"
-              does not exist on /services/. */}
-          <a href="/#projects" className="svc-proof__link">
+          {/* The work lives on the home page, so the link is absolute: "#projects"
+              does not exist on /services/. proofHref points a service at other work
+              (the business-websites proof is the sample-sites grid). */}
+          <a href={service.proofHref ?? '/#projects'} className="svc-proof__link">
             See the build
-            <span className="sr-only">: the projects behind {service.title}</span>
+            <span className="sr-only">: the work behind {service.title}</span>
             <ArrowRight size={16} strokeWidth={2.3} aria-hidden="true" />
           </a>
         </div>

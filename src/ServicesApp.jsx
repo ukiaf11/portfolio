@@ -9,6 +9,7 @@ import {
   Scissors,
   Smartphone,
   Sparkles,
+  Store,
   UtensilsCrossed,
 } from 'lucide-react'
 import Background from './components/Background'
@@ -17,7 +18,7 @@ import Footer from './components/Footer'
 import WebsiteTypes from './components/WebsiteTypes'
 import Services from './components/Services'
 import LiquidGlass from './components/glass/LiquidGlass'
-import { liveSites, profile, servicesPage } from './data/profile'
+import { liveSites, profile, sampleSites, sampleSitesIntro, servicesPage } from './data/profile'
 
 /**
  * The glyph on each live site's app-icon tile. The same glyphs as the home page's Work
@@ -50,6 +51,9 @@ function splitHeadline(text) {
  * sign-in wall, demo data) rides along with its category, and inside the link, so it
  * is part of the link's accessible name too. The dot is visual only; a screen reader
  * hears a comma instead.
+ *
+ * The sample business sites are one row for the whole group, linking to their grid on
+ * the home page (same tab, so a plain arrow), and they count towards the total.
  */
 function LiveProof() {
   return (
@@ -61,7 +65,7 @@ function LiveProof() {
         <p id="svc-live-title" className="svc-live__title">
           {servicesPage.liveTitle}
         </p>
-        <span className="chip chip--live svc-live__count">{liveSites.length} sites</span>
+        <span className="chip chip--live svc-live__count">{liveSites.length + sampleSites.length} sites</span>
       </div>
 
       <ul className="svc-live__list inset">
@@ -92,6 +96,22 @@ function LiveProof() {
             </li>
           )
         })}
+        {sampleSites.length > 0 && (
+          <li>
+            <a href="/#work-samples" className="svc-live__link">
+              <span className="tile tile--sm" style={{ '--tile': 'var(--sys-indigo)' }} aria-hidden="true">
+                <Store size={15} strokeWidth={2.2} />
+              </span>
+              <span className="svc-live__text">
+                <span className="svc-live__name">{sampleSitesIntro.title}</span>
+                <span className="svc-live__cat">
+                  {sampleSitesIntro.listLabel.replace('{count}', sampleSites.length)}
+                </span>
+              </span>
+              <ArrowRight className="svc-live__arrow svc-live__arrow--in" size={17} strokeWidth={2.3} aria-hidden="true" />
+            </a>
+          </li>
+        )}
       </ul>
 
       <a href="/#work" className="svc-live__more">

@@ -47,12 +47,16 @@ export const aboutIntro = { eyebrow, title }                // the lead is profi
 export const aboutPillars = [ { icon, title, body } ]
 export const aboutFocus = { title, rows: [ { icon, label, value } ] }
 
-// Work: the live websites
+// Work: the live websites, then the sample business sites (never client work)
 export const liveSites = [
   { id, name, url, category, tagline, summary, features: [...], stack: [...], accent,
     images: { desktop, desktopSmall, mobile }, note?, noteShort?, context? },
 ]
 export const liveSitesIntro = { eyebrow, title, lead }
+export const sampleSites = [
+  { id, name, url, business, place, blurb, stack: [...], accent, images: { desktop, desktopSmall } },
+]
+export const sampleSitesIntro = { title, lead, badge, listLabel, note }
 
 // Skills: one flat list of groups, so add, remove or reorder freely
 export const skillsIntro = { eyebrow, title, lead, primaryKicker, dailyLabel, otherLabel, dailyCount }
@@ -72,10 +76,10 @@ export const footerCredits = { builtWith: [...] }
 // /services/
 export const servicesPage = { h1, intro, primaryAction, secondaryAction, liveTitle, liveMore }
 export const websiteTypesIntro = { eyebrow, title, lead }
-export const websiteTypes = [ { id, examples?, name, icon, preview, blurb, bestFor, highlights: [...] } ]
+export const websiteTypes = [ { id, examples?, samples?, name, icon, preview, blurb, bestFor, highlights: [...] } ]
 export const servicesIntro = { eyebrow, titleLead, titleAccent, lead }
 export const services = [
-  { id, icon, title, tagline, flag?, pitch, bestFor, deliverables: [...], stack: [...], proof },
+  { id, icon, title, tagline, flag?, pitch, bestFor, deliverables: [...], stack: [...], proof, proofHref? },
 ]
 export const servicesCta = { headline, sub, buttonLabel, mailSubject, mailBody }
 
@@ -88,7 +92,11 @@ export const sectionNo      // (id) => "01", "02"… or null
 A few fields carry placeholders or conventions:
 
 - `heroIntro.leadEmphasis` lists the phrases of `lead` that render in bold. The hero chip reads
-  `${liveSites.length} ${heroIntro.liveLabel}` ("5 live sites").
+  `${liveSites.length + sampleSites.length} ${heroIntro.liveLabel}` ("11 live sites").
+- `sampleSitesIntro.listLabel` has a `{count}` placeholder, filled in with the number of sample sites.
+- The sample sites are always called samples ("Sample site" on every card): they were not commissioned.
+  `sampleSitesIntro.lead` and the business-websites `proof` name the businesses, so update both when the
+  list changes.
 - `skillsIntro.dailyCount` has `{daily}` and `{total}` placeholders, which the Skills section fills in.
 - `liveSites[].note` is an honest caveat the visitor should know before clicking (a sign-in wall, demo
   data, a service that is down). `noteShort` is its two-to-three-word form, for the `/services/` list.
@@ -129,8 +137,13 @@ it, so the eyebrow drops its prefix instead of rendering `00 —`.
 
 Each `liveSites` entry becomes a case in the Work section: a screenshot window, the copy, the stack and a
 "Visit live site" link with the hostname beside it. Screenshots live in `public/work/` as WebP; DESIGN.md
-§11 has the file-naming rule. The same sites appear on `/services/` as a compact list, and a website type
-links to the sites in its `examples`.
+§11 has the file-naming rule and how to capture them. The same sites appear on `/services/` as a compact
+list, and a website type links to the sites in its `examples`.
+
+Under the cases, `sampleSites` renders as a compact grid in one frosted panel (`#work-samples`): a small
+browser window with the screenshot, the name as the link, a "Sample site" chip, what the business is, one
+line on the site and its stack. The index row at the top of the section ends with a capsule that jumps to
+it. On `/services/` the samples are one row in the live list, and a website type lists them in `samples`.
 
 ### Website types
 
@@ -139,14 +152,16 @@ links to the sites in its `examples`.
 encoding one as coordinate arrays in the data file would make the data unreadable without buying
 anything. Adding a type means adding a composition there and mapping its `icon` in
 `WebsiteTypes.jsx`. `examples` lists the `liveSites` ids that really are that kind of site, and each one's
-`note` is shown under its link.
+`note` is shown under its link. `samples` does the same for `sampleSites` ids, under a "Sample sites" label
+with `sampleSitesIntro.note` beneath.
 
 ### Services
 
 Each service is a row in one frosted bento plate. `pitch` addresses the client in second person and leads
 with the outcome rather than the technology; `deliverables` render as the "What you get" list; `proof`
-must name a **real** project from the `projects` array, and links through to the home page's Projects
-section. A service may carry a short `flag` (for example "Core strength"), rendered as a chip in its row:
+must name **real** work: a project from the `projects` array, or the sample sites (called samples). Its
+"See the build" link goes to the home page's Projects section, or to `proofHref` when set (the
+business-websites proof points at `/#work-samples`). A service may carry a short `flag` (for example "Core strength"), rendered as a chip in its row:
 emphasis by label, not by size.
 
 ### Skills

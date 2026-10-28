@@ -223,6 +223,8 @@
     color: var(--accent-ink);
     transform: translate(2px, -2px);
   }
+  /* The sample-sites row stays on this site, so its arrow points right and moves right. */
+  .svc-live__link:hover .svc-live__arrow--in { transform: translateX(2px); }
 }
 .svc-live__more {
   display: flex;

@@ -241,6 +241,11 @@ landed, and the header now costs 2.
 Measured on 2026-09-26, after the QA fixes (`glassaudit.mjs`, both pages, 1440 and 390, both themes): at most **5**
 backdrop-filter surfaces in any viewport, refract 3 on `/` and 2 on `/services/`, `nested=0`, `rootProblems=0`.
 
+Measured again on 2026-10-28, after the sample-sites grid was added, with a finer sweep (every 150 px, 1440 and 390):
+at most **6** in any viewport, at the hero-to-About seam (header 2, hero 3, About's story panel 1), which the grid
+does not touch. The Work section peaks at 3 (a case card, its hostname capsule and the samples panel). No nesting
+and no backdrop roots.
+
 ---
 
 ## 5. The bento pattern
@@ -524,6 +529,11 @@ Every section below the jump stayed invisible, and the nav indicator froze. Head
   must commit with `flushSync` (or write to the DOM directly, as the hero parallax does).
 - Do not call `flushSync` inside an effect or during render. For the first measurement inside `useEffect`, use a
   plain `setState`.
+- **Read every entry an observer hands you.** One callback batch can hold several entries for the same target,
+  oldest first. That happens when the page jumps right after mount: a deep link such as `/#projects`, or a fast
+  scroll. `Reveal` reveals if any entry intersects, and the hero parallax reads the newest one. Reading only
+  `entries[0]` sees the stale first-paint "not intersecting" entry: on 2026-10-28 that left the sample-sites
+  panel hidden after 5 of 6 jumps, in Chrome.
 
 ---
 
@@ -547,11 +557,15 @@ Every section below the jump stayed invisible, and the nav indicator froze. Head
 ## 11. Image rules
 
 - Images are real screenshots only. They live in `public/work/` as WebP, all referenced from `profile.js`
-  (`liveSites[].images`), where `<id>` is the site's `liveSites` id. There are no remote images and no stock images.
+  (`liveSites[].images` and `sampleSites[].images`), where `<id>` is the site's id in that list. There are no remote
+  images and no stock images.
   - Desktop files are `<id>-<width>.webp`. The width is 1280, or the capture's native width when it is narrower
     and must not be upscaled. The one such file today is `omni-panel-1152.webp`, whose width `LiveWork.jsx`
     declares in `SITE_UI.desktopWidth` (so the `srcset` descriptor is honest).
-  - The other files are `<id>-640.webp` and `<id>-mobile.webp`.
+  - The other files are `<id>-640.webp` and `<id>-mobile.webp`. Sample sites have only the two desktop files.
+  - Capture at 1280×800 in the light scheme with reduced motion. When a site shows a live open/closed badge, fix
+    the page clock inside its business hours (Playwright's `page.clock.setFixedTime`, with the site's time zone), so
+    the badge reads "Open now" rather than whatever it said at capture time.
 - Always set `width` and `height` (for zero CLS), `loading="lazy"`, `decoding="async"` and a real `alt` that describes the
   site. The only exception is `alt=""` for a purely decorative duplicate.
 - For desktop shots, use `srcSet="…-640.webp 640w, …-1280.webp 1280w"` with an honest `sizes`, and use the 640 file as the `src` fallback.
@@ -616,7 +630,7 @@ hand or with your own Playwright script. The pass criteria are what matters:
 | No radius props or inline radii | `grep -rn -e "radius=" -e "borderRadius" src/components --include=*.jsx` | Only the 3 refract surfaces (`Nav.jsx` ×2, `Hero.jsx` ×1) and `LiquidGlass.jsx` |
 | Overflow and console | Load `/` and `/services/` at 360, 390, 768, 1024, 1440 and 1920 in both themes, scroll to the bottom | `documentElement.scrollWidth − innerWidth = 0`; no console errors or failed requests; **look at every section** |
 | Glass budget | Count elements whose computed `backdrop-filter` is not `none`, per viewport, while scrolling | Refract ≤ 3 (2 on `/services/`); frost visible ≤ 8 per viewport (measured peak: 5); no backdrop-filter element inside another; no opacity/filter/mask/will-change ancestor above one (§9) |
-| Reveals | Click every nav link, then check the viewport | No `.reveal:not(.is-visible)` element inside the viewport, in Chrome, Firefox **and WebKit** (see §9.1) |
+| Reveals | Click every nav link, and load each section's URL fresh with its hash (`/#projects`, `/#work-samples`), then check the viewport | No `.reveal:not(.is-visible)` element inside the viewport, in Chrome, Firefox **and WebKit** (see §9.1) |
 | Contrast | Hide the text, sample the real backdrop behind each text run, compute WCAG ratios | Body text ≥ 4.5:1 everywhere (measured floor 4.58:1); large text and UI boundaries ≥ 3:1 |
 | Touch targets | Emulate touch at 390 and at 1024–1366 with a coarse pointer | No control under 44px |
 | Theme and glass modes | Emulate `prefers-reduced-transparency`, `prefers-contrast: more` and `forced-colors`; use the switch | Default `refract` (Chromium, fine pointer); the emulations give `solid` with 0 backdrop filters and the switch on and disabled; the switch persists across reloads |

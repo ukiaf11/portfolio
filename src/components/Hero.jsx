@@ -3,7 +3,7 @@ import { ArrowRight, Briefcase, Github, Mail, MapPin, Phone } from 'lucide-react
 import LiquidGlass from './glass/LiquidGlass'
 import { useIsDark } from '../lib/theme'
 import { formatDay, isoDay, parseDay } from '../lib/dates'
-import { experience, heroIntro, highlights, liveSites, profile } from '../data/profile'
+import { experience, heroIntro, highlights, liveSites, profile, sampleSites } from '../data/profile'
 
 /**
  * The depth stage's two decorative captures: a desktop window and a phone, both real
@@ -68,8 +68,10 @@ function useStageParallax(ref) {
         stage.style.removeProperty('--py')
       }
     }
-    const io = new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting
+    // A batch can hold several entries for the stage, oldest first (a deep link jumps away
+    // right after mount), so the newest one is the current state.
+    const io = new IntersectionObserver((entries) => {
+      inView = entries[entries.length - 1].isIntersecting
       sync()
     })
     io.observe(stage)
@@ -193,7 +195,7 @@ export default function Hero() {
             className="hero-stage__live glass-capsule"
           >
             <span className="hero-stage__dot" aria-hidden="true" />
-            {`${liveSites.length} ${heroIntro.liveLabel}`}
+            {`${liveSites.length + sampleSites.length} ${heroIntro.liveLabel}`}
             <ArrowRight size={15} strokeWidth={2.4} aria-hidden="true" />
           </LiquidGlass>
 

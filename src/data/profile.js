@@ -38,7 +38,8 @@ export const heroIntro = {
   lead: "I build scalable microservices, complex multi-tenant SaaS architectures and AI-integrated products: robust Django backends paired with dynamic React frontends.",
   // Substrings of `lead` that render in bold, in order.
   leadEmphasis: ["scalable microservices", "multi-tenant SaaS architectures", "AI-integrated products"],
-  // Rendered as `${liveSites.length} ${liveLabel}`, e.g. "5 live sites".
+  // Rendered as `${liveSites.length + sampleSites.length} ${liveLabel}`, e.g. "11 live sites".
+  // Both lists are live and deployed; the Work section labels the samples as samples.
   liveLabel: "live sites",
 }
 
@@ -107,8 +108,9 @@ export const skillsIntro = {
  *          reached for when the problem calls for it.
  *  primary — exactly one group gets this. It renders as the wide featured band.
  *
- * Same 28 technologies, regrouped by what they DO rather than which
- * architectural tier they sit in.
+ * The technologies are grouped by what they DO rather than which architectural
+ * tier they sit in. Astro was added on 2026-10-28: two of the sample business
+ * sites (sampleSites) are built with it.
  */
 export const skills = [
   {
@@ -135,6 +137,7 @@ export const skills = [
       { name: "React", daily: true },
       { name: "JavaScript" },
       { name: "Vite" },
+      { name: "Astro" },
       { name: "Tailwind CSS" },
       { name: "HTML" },
       { name: "CSS" },
@@ -448,7 +451,133 @@ export const liveSitesIntro = {
   eyebrow: "Work",
   title: "Shipped, deployed and one click away",
   lead:
-    "Real, deployed sites — a storefront, an ordering platform, a booking site, a SaaS dashboard and an AI tool. Open any of them and click through it yourself.",
+    "Real, deployed sites — a storefront, an ordering platform, a booking site, a SaaS dashboard and an AI tool, plus sample websites for local businesses. Open any of them and click through it yourself.",
+}
+
+/**
+ * Sample websites for real local businesses, built on Upendra's own initiative. They were
+ * NOT commissioned. Every card says "Sample site", and none of them may ever be described
+ * as client work (confirmed with Upendra on 2026-10-28).
+ *
+ * Every word here was taken from what the live site shows (rendered on 2026-10-28). The
+ * facts on the sites themselves came from each business's public listings.
+ *
+ *  business — what the business is, in plain words
+ *  place    — where it is
+ *  blurb    — one line on what the site gives that business. Only features the site has.
+ *  accent   — the site's own brand colour, sampled from its main button; a small dot only
+ *  images   — first-viewport captures at 1280x800 (light scheme, reduced motion, with the
+ *             page clock at a weekday 6 PM IST so the live "Open now" badges show business
+ *             hours), stored as WebP in /public/work (naming rule: DESIGN.md §11)
+ *
+ * sampleSitesIntro.lead and the business-websites `proof` below name the businesses, so
+ * update both when this list changes.
+ */
+export const sampleSites = [
+  {
+    id: "tripathi-clinic",
+    name: "Tripathi Clinic",
+    url: "https://tripathi-clinic.vercel.app/",
+    business: "Orthopaedic and maternity clinic",
+    place: "Sector 22, Noida",
+    blurb:
+      "A page for each speciality, a symptom finder that points patients to the right doctor, live opening hours and booking on WhatsApp.",
+    stack: ["Astro", "Tailwind CSS", "Motion"],
+    accent: "#157a43",
+    images: {
+      desktop: "/work/tripathi-clinic-1280.webp",
+      desktopSmall: "/work/tripathi-clinic-640.webp",
+    },
+  },
+  {
+    id: "prakash-clinic",
+    name: "Prakash Clinic",
+    url: "https://prakash-clinic.vercel.app/",
+    business: "ENT and family clinic",
+    place: "Sector 22, Noida",
+    blurb:
+      "One page for a doctor practising since 1986: ear, nose and throat care explained area by area, both daily OPD sessions with a live open status, and one-tap calling.",
+    stack: ["Astro", "Tailwind CSS", "Motion"],
+    accent: "#2443b5",
+    images: {
+      desktop: "/work/prakash-clinic-1280.webp",
+      desktopSmall: "/work/prakash-clinic-640.webp",
+    },
+  },
+  {
+    id: "neelkanth-chemist",
+    name: "Neelkanth Chemist",
+    url: "https://neelkanth-chemist.vercel.app/",
+    business: "24/7 pharmacy",
+    place: "Sector 27, Noida",
+    blurb:
+      "One page built around the two things people need from an all-night pharmacy: Call Now and Get Directions, a tap away all the way down the page.",
+    stack: ["HTML", "CSS", "JavaScript"],
+    accent: "#0b53aa",
+    images: {
+      desktop: "/work/neelkanth-chemist-1280.webp",
+      desktopSmall: "/work/neelkanth-chemist-640.webp",
+    },
+  },
+  {
+    id: "swank-salon",
+    name: "Swank Unisex Salon",
+    url: "https://swankunisexsalon.vercel.app/",
+    business: "Unisex salon",
+    place: "Sector 22, Noida",
+    blurb:
+      "Treatments from keratin to bridal, a full services menu, a gallery, reviews, a live open-now status and booking on WhatsApp.",
+    stack: ["HTML", "CSS", "JavaScript"],
+    accent: "#ad5a45",
+    images: {
+      desktop: "/work/swank-salon-1280.webp",
+      desktopSmall: "/work/swank-salon-640.webp",
+    },
+  },
+  {
+    id: "motofixers-noida",
+    name: "MotoFixers Noida",
+    url: "https://motofixers-noida.vercel.app/",
+    business: "Luxury car workshop and detailing studio",
+    place: "Sector 104, Noida",
+    blurb:
+      "Four pages: eight services from paint protection film to mechanical repairs, a detailed service catalogue, a gallery, reviews and a booking form that sends to WhatsApp.",
+    stack: ["HTML", "CSS", "JavaScript"],
+    accent: "#20ace8",
+    images: {
+      desktop: "/work/motofixers-noida-1280.webp",
+      desktopSmall: "/work/motofixers-noida-640.webp",
+    },
+  },
+  {
+    id: "rawat-motors",
+    name: "Rawat Motors",
+    url: "https://rawat-motors.vercel.app/",
+    business: "Car repair workshop",
+    place: "Sector 16, Noida",
+    blurb:
+      "One page for a workshop running since 2000: nine service areas, how a visit works from first call to handover, reviews, FAQs and a map.",
+    stack: ["HTML", "CSS", "JavaScript"],
+    accent: "#ff8a1f",
+    images: {
+      desktop: "/work/rawat-motors-1280.webp",
+      desktopSmall: "/work/rawat-motors-640.webp",
+    },
+  },
+]
+
+/**
+ * Read by LiveWork.jsx (the grid under the five cases, and its capsule in the index row),
+ * ServicesApp.jsx (one row for the whole group in the live-sites list) and
+ * WebsiteTypes.jsx (`note`, under a type's sample-site links).
+ * `listLabel` has a {count} placeholder, which the components fill in.
+ */
+export const sampleSitesIntro = {
+  title: "Business websites",
+  lead: "Sample sites I built on my own for real businesses in Noida: two clinics, a 24/7 chemist, a salon and two car workshops. None was commissioned. They show what a local business gets from me, and every one is live.",
+  badge: "Sample site",
+  listLabel: "{count} sample sites for local businesses",
+  note: "Built on my own for real businesses in Noida. None was commissioned.",
 }
 
 /** Read by Services.jsx: the section head (the accent part of the title is set apart). */
@@ -467,7 +596,10 @@ export const servicesIntro = {
  *
  *  pitch        — addresses the client in second person and leads with the outcome.
  *  deliverables — concrete, 2-5 words, rendered as a ledger rather than bullets.
- *  proof        — a REAL project from the list above. Never invent client work.
+ *  proof        — REAL work: a project from the list above, or the sample sites. Never
+ *                 invent client work, and call the sample sites samples.
+ *  proofHref    — where the proof's "See the build" link points. Defaults to the home
+ *                 page's Projects section.
  */
 export const services = [
   {
@@ -487,7 +619,8 @@ export const services = [
     ],
     stack: ["React", "Vite", "Tailwind CSS", "Django", "PostgreSQL"],
     proof:
-      "The Multi-Vendor Hotel & Food Ordering Platform gave every hotel owner a public storefront with real-time pricing — customer-facing pages that had to stay quick on a phone.",
+      "Six sample sites for real Noida businesses are live: two clinics, a 24/7 chemist, a salon and two car workshops. Each has one-tap calling, a map for directions and its business details marked up for Google. I built them on my own; none was commissioned.",
+    proofHref: "/#work-samples",
   },
   {
     id: "web-apps-saas",
@@ -563,10 +696,19 @@ export const services = [
  *
  * `examples` lists `liveSites` ids that ARE this kind of site, so a sketch can link to a
  * real, deployed one. Only list a site that genuinely is this kind of site.
+ * `samples` does the same with `sampleSites` ids; their links are labelled as samples.
  */
 export const websiteTypes = [
   {
     id: "business-site",
+    samples: [
+      "tripathi-clinic",
+      "prakash-clinic",
+      "neelkanth-chemist",
+      "swank-salon",
+      "motofixers-noida",
+      "rawat-motors",
+    ],
     name: "Business website",
     icon: "Building2",
     preview: "brochure-stack",

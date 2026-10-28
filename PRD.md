@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | **Owner** | Upendra Kumar |
-| **Status** | Complete (pending commit and real-device check) |
+| **Status** | Complete. Sample business sites added on 2026-10-28 (R3.1; not committed yet). Real-device check pending |
 | **Started** | 2026-09-25 |
 | **Tracking** | [`TODO.md`](TODO.md) · decisions and progress log in [`MEMORY.md`](MEMORY.md) |
 
@@ -100,6 +100,29 @@ Each entry needs:
 
 On `/services/`, the website-type cards link to the matching live example where one exists.
 
+### R3.1 — Sample business sites (added 2026-10-28)
+
+Six sample websites for real Noida businesses go in a compact grid under the five cases. They were built on
+Upendra's own initiative, and none was commissioned (confirmed with Upendra on 2026-10-28).
+
+| # | Site | URL |
+| --- | --- | --- |
+| 1 | Tripathi Clinic | https://tripathi-clinic.vercel.app/ |
+| 2 | Prakash Clinic | https://prakash-clinic.vercel.app/ |
+| 3 | Neelkanth Chemist | https://neelkanth-chemist.vercel.app/ |
+| 4 | Swank Unisex Salon | https://swankunisexsalon.vercel.app/ |
+| 5 | MotoFixers Noida | https://motofixers-noida.vercel.app/ |
+| 6 | Rawat Motors | https://rawat-motors.vercel.app/ |
+
+- **Labelled as samples.** Every card says "Sample site", the grid's lead says none was commissioned, and no
+  copy anywhere calls them client work (R8).
+- **Each card:** one real screenshot (1280 and 640 WebP), the name as the card's one link, what the business is and
+  where, one line on the site taken from what it shows, and the stack.
+- **One frosted bento panel** for the whole grid, so the Work section stays within its budget of 3 surfaces.
+- **`/services/` points at them too:** one row in the live-sites list, the Business website type's sample links,
+  and the business-websites proof, whose "See the build" link goes to the grid.
+- The hero's live-sites count includes them, because they are live.
+
 ### R4 — Accessibility
 
 - Body text on glass meets **WCAG AA, 4.5:1**, against the worst-case background behind it in both
@@ -158,6 +181,23 @@ Status as of 2026-09-26, measured on the production build.
       `prefers-contrast` and forced colours.
 - [x] Lighthouse targets in R5 are met. Mobile `/` scores 98 / 100 / 100 / 100, and CLS is 0.
 - [x] README, `PRD.md`, `MEMORY.md` and `TODO.md` are up to date.
+
+R3.1, measured on 2026-10-28 on the production build:
+
+- [x] The grid shows all 6 sample sites, each with a real screenshot, the "Sample site" label and a working link.
+      Every link returns 200.
+- [x] No horizontal scroll, console errors, failed requests or broken images: 24 runs (both pages; 360, 390, 768,
+      1024, 1440 and 1920 px; both themes).
+- [x] Contrast of every new text run, measured against the real pixels behind it at 1440 and 390 px in both themes:
+      floor 5.43:1 (5th percentile), lowest single pixel 4.61:1.
+- [x] Frost peak 6 per viewport, at the hero-to-About seam, which this change does not touch. The Work section
+      peaks at 3. No nesting, no backdrop roots.
+- [x] Reveals: 0 hidden elements in view after deep links (`/#work-samples`, `/#work`, `/#projects`, `/#education`,
+      `/#contact`) and after the index link, at 1440 and 390, in Chrome and Firefox. `/#work-samples` lands at 104 px.
+- [x] Touch targets: every new control is at least 44 px. CLS 0 at 390 px.
+- [x] Reduced transparency and forced colours: the panel goes solid, with 0 backdrop filters.
+- [x] Lighthouse mobile `/`: Performance 87–95 over three runs (median 92) against 88–96 (median 91) for the
+      previous commit on the same machine, with the same LCP (2.2 s). Accessibility, Best Practices and SEO 100.
 
 Not verified: real Safari on macOS and iOS, and real mid-range Android hardware. WebKit and Firefox
 were tested headless only, and headless engines do not paint `backdrop-filter`.

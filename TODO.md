@@ -101,8 +101,25 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` not started
 - [x] MEMORY.md (decisions, progress and open questions) and TODO.md updated
 - [ ] Upendra: answer the open questions in MEMORY.md (the AI Content Optimizer API, Postman, the
       degree name, project-to-site links)
-- [ ] Commit the QA-pass changes, ideally on a branch, and check the Vercel preview before merging
-      to `main`
+- [x] Commit the QA-pass changes (Upendra committed and pushed them as e909997 on 2026-09-26)
+
+## Phase 8 — Sample business sites (2026-10-28, PRD R3.1)
+- [x] Find the new work: six live sites on Upendra's Vercel account, sources in `../Static_websites/`
+- [x] Confirm with Upendra: all six go in, they are samples (not client work), shown as a compact grid
+- [x] Capture screenshots (1280×800 at 6 PM IST, so live badges show "Open now"); WebP 1280 and 640
+- [x] `sampleSites` and `sampleSitesIntro` in `profile.js`, with copy checked against each live site
+- [x] The grid (one frost bento) and its index capsule in the Work section
+- [x] `/services/`: a live-list row, the Business website type's sample links, the business-websites proof
+- [x] The hero count includes the samples; Astro added to Skills
+- [x] Fix `Reveal` (and the hero parallax) reading only the first observer entry, found during QA
+- [x] QA on the production build (see PRD §8), and DESIGN.md, PRD.md, MEMORY.md and README updated
+- [x] Commit this work as Upendra, and remove Claude's co-author lines from the two earliest commits so
+      only Upendra's account shows in GitHub's Contributors list (history rewritten locally)
+- [ ] Upendra: publish it with `git push --force-with-lease origin main` (a force push, because the
+      history was rewritten); then delete the local `backup/before-contributor-cleanup` branch
+- [ ] Upendra: add the WhatsApp number to the Rawat Motors site, replace the Practo photos on the Tripathi
+      Clinic site, and fix the blog's 404 (MEMORY.md, "Found on 2026-10-28")
+- [ ] When Sri Prabha Homeo Clinic or Gaon Samadhan go live, add them (MEMORY.md open questions)
 
 ## Follow-ups (suggested, not started)
 - [ ] Move the QA checks into the repo (`scripts/qa/`, with Playwright as a dev dependency)

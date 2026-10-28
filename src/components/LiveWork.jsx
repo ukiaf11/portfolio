@@ -14,7 +14,7 @@ import {
 import Section from './Section'
 import Reveal from './Reveal'
 import LiquidGlass from './glass/LiquidGlass'
-import { liveSites, liveSitesIntro } from '../data/profile'
+import { liveSites, liveSitesIntro, sampleSites, sampleSitesIntro } from '../data/profile'
 
 /**
  * Presentation-only details per site, keyed by `liveSites[].id`. Nothing here is a claim:
@@ -58,6 +58,14 @@ const hostOf = (url) => {
 
 const pad = (n) => String(n).padStart(2, '0')
 
+/** The sample sites' brand colours as one pie-slice dot, for their capsule in the index row. */
+const SAMPLE_DOTS = `conic-gradient(${sampleSites
+  .map((s, i, all) => `${s.accent} ${(i * 360) / all.length}deg ${((i + 1) * 360) / all.length}deg`)
+  .join(', ')})`
+
+/** Fills the {count} placeholder in sampleSitesIntro.listLabel. */
+const sampleCount = () => sampleSitesIntro.listLabel.replace('{count}', sampleSites.length)
+
 /**
  * A mouse-only duplicate of the case's one real link ("Visit live site"): it makes the
  * screenshot and the title clickable without adding a tab stop or a second link to the
@@ -80,6 +88,8 @@ function HitArea({ site, className }) {
 /**
  * The index row: one capsule per site, each jumping to its case. The ordinal matches the
  * case card's "01 / 05"; it is visual only (the ordered list already gives the position).
+ * The last capsule jumps to the sample-sites grid: a pie dot of their brand colours and
+ * "+6" where a case has its ordinal.
  */
 function SiteIndex() {
   return (
@@ -100,6 +110,22 @@ function SiteIndex() {
             </a>
           </li>
         ))}
+        {sampleSites.length > 0 && (
+          <li>
+            <a
+              href="#work-samples"
+              className="work-index__link glass glass-capsule glass-interactive"
+              style={{ '--dots': SAMPLE_DOTS }}
+            >
+              <span className="work-index__dot work-index__dot--group" aria-hidden="true" />
+              <span className="work-index__no" aria-hidden="true">
+                +{sampleSites.length}
+              </span>
+              <span className="work-index__name">{sampleSitesIntro.title}</span>
+              <span className="sr-only">: {sampleCount()}</span>
+            </a>
+          </li>
+        )}
       </ol>
     </Reveal>
   )
@@ -293,6 +319,104 @@ function WorkItem({ site, index, total }) {
   )
 }
 
+/**
+ * One sample site, as a bento cell: a small browser window (an .inset plate, so faux, with
+ * the hostname on its strip) holding the screenshot, then the name as the cell's one real
+ * link with the "Sample site" chip beside it, what the business is, one line on the site,
+ * and the stack. The screenshot is a mouse-only duplicate of the name link (HitArea).
+ */
+function SampleCell({ site }) {
+  const host = hostOf(site.url)
+  return (
+    <li className="bento__cell work-sample" style={{ '--site': site.accent }}>
+      <div className="work-sample__window inset">
+        <div className="work-sample__bar" aria-hidden="true">
+          <span className="work-sample__lights">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="work-sample__host">{host}</span>
+        </div>
+        <img
+          className="work-sample__shot"
+          src={site.images.desktopSmall}
+          srcSet={`${site.images.desktopSmall} 640w, ${site.images.desktop} 1280w`}
+          sizes="(min-width: 1280px) 337px, (min-width: 1024px) calc(33vw - 84px), (min-width: 640px) calc(50vw - 88px), calc(100vw - 92px)"
+          width="1280"
+          height="800"
+          loading="lazy"
+          decoding="async"
+          alt={`${site.name} home page on a desktop browser`}
+        />
+        <HitArea site={site} className="work-sample__hit" />
+      </div>
+
+      <h4 className="work-sample__head">
+        <a
+          href={site.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="work-sample__link tap-target"
+        >
+          {site.name}
+          <span className="sr-only"> (opens in a new tab)</span>
+          <ArrowUpRight className="work-sample__arrow" size={17} strokeWidth={2.4} aria-hidden="true" />
+        </a>
+        <span className="chip chip--accent work-sample__badge">{sampleSitesIntro.badge}</span>
+      </h4>
+
+      <p className="work-sample__meta">
+        <span className="work-sample__dot" aria-hidden="true" />
+        <span>
+          {site.business}
+          <span aria-hidden="true"> · </span>
+          <span className="sr-only">, </span>
+          <span className="work-sample__place">{site.place}</span>
+        </span>
+      </p>
+
+      <p className="work-sample__blurb">{site.blurb}</p>
+
+      <ul className="work-sample__stack" aria-label="Built with">
+        {site.stack.map((t) => (
+          <li key={t} className="chip">
+            {t}
+          </li>
+        ))}
+      </ul>
+    </li>
+  )
+}
+
+/**
+ * The sample business sites, under the five cases: a heading and lead, then ONE frosted
+ * bento panel with a cell per site. Backdrop cost: the panel only (everything inside it is
+ * faux), so this block adds one surface to the section's budget.
+ */
+function SampleSites() {
+  if (sampleSites.length === 0) return null
+  return (
+    <div id="work-samples" className="work-samples">
+      <Reveal className="work-samples__head">
+        <h3 id="work-samples-title" className="work-samples__title">
+          {sampleSitesIntro.title}
+        </h3>
+        <p className="work-samples__lead">{sampleSitesIntro.lead}</p>
+      </Reveal>
+      <Reveal delay={120}>
+        <LiquidGlass tier="frost" className="bento work-samples__panel">
+          <ul className="bento__grid work-samples__grid" aria-labelledby="work-samples-title">
+            {sampleSites.map((site) => (
+              <SampleCell key={site.id} site={site} />
+            ))}
+          </ul>
+        </LiquidGlass>
+      </Reveal>
+    </div>
+  )
+}
+
 export default function LiveWork() {
   return (
     <Section
@@ -308,6 +432,7 @@ export default function LiveWork() {
           <WorkItem key={site.id} site={site} index={i} total={liveSites.length} />
         ))}
       </ol>
+      <SampleSites />
     </Section>
   )
 }

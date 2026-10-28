@@ -12,6 +12,9 @@
                         screenshot) and a phone in a glass bezel
      .work-case__specs  the spec strip (Highlights, Built with): type on the
                         wallpaper, faux chips, no panel
+   After the cases, .work-samples: the sample business sites, a heading on the
+   wallpaper and ONE frost bento whose cells hold a small browser window (an
+   .inset plate, so faux) and the copy. Backdrop cost: the panel only.
    Layout
      phones    stage, card, specs, stacked
      tablets   stage across; card and specs side by side, the card lifted over
@@ -121,6 +124,14 @@ html[data-glass="solid"] .work { --bezel-a: var(--glass-a-solid); }
   box-shadow: 1px 0 0 var(--hairline);
 }
 .work-index__name { min-width: 0; }
+/* The sample-sites capsule: a pie of their brand colours (--dots, set inline) with a
+   neutral ring, since there is no single site colour to tint it with. */
+.work-index__dot--group {
+  background: var(--dots);
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--fg) 12%, transparent),
+    inset 0 1px 0 var(--dot-gloss);
+}
 @media (max-width: 480px) {
   .work-index__list { gap: 8px; }
   .work-index__link { padding: 0 15px 0 13px; font-size: 14px; gap: 9px; }
@@ -601,23 +612,221 @@ html:not(.dark):not([data-glass="solid"]) .work-item--dark .work-card {
   background: rgb(var(--glass-tint) / var(--glass-a));
 }
 
+/* ---- Sample sites -----------------------------------------------------------------
+   A heading on the wallpaper, then ONE frost bento (one, two, then three columns).
+   Cells are plain boxes; the window in each is an .inset plate, so nothing inside the
+   panel has a backdrop-filter. Each cell is a flex column, so the stack chips sit on
+   the cell's bottom edge and line up across a row. */
+.work-samples {
+  margin-top: clamp(88px, 10vw, 144px);
+}
+.work-samples__head {
+  display: grid;
+  gap: 12px;
+  max-width: 46rem;
+  margin-bottom: clamp(24px, 3vw, 36px);
+}
+@media (min-width: 1024px) {
+  .work-samples__head {
+    max-width: none;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: 56px;
+    align-items: end;
+  }
+}
+.work-samples__title {
+  font-size: var(--text-title-2);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.work-samples__lead {
+  max-width: 34rem;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  letter-spacing: -0.006em;
+  color: var(--fg-muted);
+}
+@media (min-width: 640px) {
+  .work-samples__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .work-samples__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.work-sample {
+  container: work-sample / inline-size;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The window: an inset plate with a strip (traffic lights and the hostname), then the
+   screenshot, concentric with the plate (18 - 6). */
+.work-sample__window {
+  position: relative;
+  padding: 0 6px 6px;
+  transition: transform var(--dur-gel) var(--ease-gel);
+}
+.work-sample__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding-inline: 7px;
+}
+.work-sample__lights {
+  flex: none;
+  display: flex;
+  gap: 5px;
+}
+.work-sample__lights i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--light-close);
+  box-shadow: inset 0 0 0 0.5px var(--light-edge);
+}
+.work-sample__lights i:nth-child(2) { background: var(--light-min); }
+.work-sample__lights i:nth-child(3) { background: var(--light-max); }
+.work-sample__host {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.004em;
+  color: var(--fg-muted);
+}
+.work-sample__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: calc(var(--r-inset) - 6px);
+  background: var(--shot-fill);
+  box-shadow: 0 0 0 1px var(--shot-ring);
+}
+/* Mouse-only duplicate of the name link, over the whole window. */
+.work-sample__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+.work-sample__hit:focus-visible { outline: none; }
+
+/* Name (the one real link) with the "Sample site" chip beside it. The longest name plus
+   the chip measured 294px, so under 310px of cell the chip goes under the name in EVERY
+   cell (a container query, and the columns are equal), and the rows of a grid line up.
+   A wrap would move it in some cells only. */
+.work-sample__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+@container work-sample (max-width: 309px) {
+  .work-sample__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+.work-sample__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+.work-sample__arrow {
+  flex: none;
+  color: var(--fg-subtle);
+  transition: transform var(--dur-gel) var(--ease-gel), color 0.2s;
+}
+.work-sample__badge { flex: none; }
+
+.work-sample__meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: var(--text-footnote);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+/* The site's own brand colour, centred on the first line. Decorative. */
+.work-sample__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: calc((1.45em - 8px) / 2);
+  border-radius: 50%;
+  background: var(--site);
+  box-shadow: 0 0 0 2.5px color-mix(in oklab, var(--site) 22%, transparent);
+}
+.work-sample__place { white-space: nowrap; }
+.work-sample__blurb {
+  margin-top: 10px;
+  font-size: var(--text-subhead);
+  line-height: 1.55;
+  color: var(--fg-muted);
+}
+.work-sample__stack {
+  margin: auto 0 0;
+  padding: 16px 0 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (hover: hover) {
+  .work-sample__link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.16em;
+    text-decoration-color: color-mix(in oklab, var(--accent-ink) 55%, transparent);
+  }
+  .work-sample:has(a:hover) .work-sample__arrow {
+    color: var(--accent-ink);
+    transform: translate(2px, -2px);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .work-sample:has(a:hover) .work-sample__window { transform: translateY(-3px); }
+}
+
 /* ---- Modes ---------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .work-window,
   .work-phone,
-  .work-card__name-arrow { transition: none; }
+  .work-card__name-arrow,
+  .work-sample__window,
+  .work-sample__arrow { transition: none; }
 }
 @media (forced-colors: active) {
   .work-window__lights,
   .work-stage__glow { display: none; }
   /* Keep the decorative dots as plain text-coloured marks instead of empty gaps. */
   .work-index__dot,
-  .work-address__live::before {
+  .work-address__live::before,
+  .work-sample__dot {
     forced-color-adjust: none;
     background: CanvasText;
     box-shadow: none;
   }
+  .work-sample__lights { display: none; }
   .work-phone { border: 1px solid CanvasText; }
-  .work-window__shot { outline: 1px solid CanvasText; }
+  .work-window__shot,
+  .work-sample__shot { outline: 1px solid CanvasText; }
   .work-specs__group--stack { border-left: 1px solid CanvasText; }
 }

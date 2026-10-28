@@ -42,8 +42,13 @@ export default function Reveal({
       return
     }
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+      (entries) => {
+        // One batch can hold several entries for this target, oldest first. When the page
+        // jumps right after mount (a deep link such as /#projects, or a fast scroll), the
+        // first-paint "not intersecting" entry and the "intersecting" one arrive together.
+        // Reading only entries[0] then left the element hidden for good (measured on
+        // 2026-10-28: 5 of 6 jumps). The reveal is one-shot, so any intersecting entry counts.
+        if (entries.some((entry) => entry.isIntersecting)) {
           // Committed synchronously rather than queued. In WebKit, after an in-page anchor
           // link is followed, React's queued (default-priority) updates stopped committing
           // while observer callbacks kept firing — every section below the jump stayed

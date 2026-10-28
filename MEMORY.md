@@ -18,6 +18,9 @@ and deployed on Vercel.
 A full **Liquid Glass** redesign plus a **Live Websites** showcase. See [`PRD.md`](PRD.md) for the
 requirements and [`TODO.md`](TODO.md) for the checklist.
 
+**2026-10-28:** six **sample business sites** (clinics, a chemist, a salon, car workshops) were added
+under the five cases as a compact grid (PRD R3.1). They are Upendra's own samples, not client work.
+
 ## Conventions (keep these)
 
 - **All visitor-facing copy lives in `src/data/profile.js`.** That covers section titles, leads and
@@ -55,7 +58,11 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 - **Icons are lucide-react names stored as strings in the data**, mapped in each component's
   `ICONS` object. An unmapped name silently falls back to that component's default icon.
 - **Never invent claims.** Project copy comes from the CV. Live-site copy comes from what the site
-  actually shows.
+  actually shows. The sample business sites (`sampleSites`) are always called samples, never client
+  work.
+- **Commits carry only Upendra's identity** (`ukiaf11 <ukiaf11@gmail.com>`). Add no `Co-Authored-By`
+  trailers: Upendra wants only their own account in GitHub's Contributors list. The two early Claude
+  trailers were removed from the history on 2026-10-28.
 - **Reduced motion** zeroes animation and transition *delays* as well as durations. Stagger is
   expressed as delay.
 
@@ -88,6 +95,11 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 | 2026-09-26 | Commit scroll-driven visibility state with `flushSync` (in `Reveal` and the Nav scroll-spy) | Headless WebKit 26.5 reproduced sections staying invisible after a nav-link click. With the fix, 0 sections in view stay hidden. Chrome and Firefox are unchanged. |
 | 2026-09-26 | Anchor offset: keep `scroll-padding-top` on `html` and cancel the extra `.section` margin | Two offsets were stacking, so nav jumps landed the heading about 42% down the viewport. The eyebrow now lands at about 104 px. |
 | 2026-09-26 | SEO: add `og:image` (1200×630, per page), Person JSON-LD, `robots.txt`, `sitemap.xml`, favicons and a `<noscript>` fallback, generated from `profile.js` by the `portfolio:head` Vite plugin | Lighthouse SEO went from 92 to 100. The pages also get proper link previews when shared. |
+| 2026-10-28 | The six sample business sites get their own list, `sampleSites`, shown as a compact grid (one frost bento) under the five cases. Every card says "Sample site" | They are Upendra's own samples, not commissioned (confirmed with Upendra). A separate list keeps them from ever being mixed up with the five products, and six more full cases would have doubled the section. Upendra chose the compact grid. |
+| 2026-10-28 | The hero's "live sites" count and the `/services/` list total include the samples (11) | They are live and deployed. The Work section labels them as samples. |
+| 2026-10-28 | Sample-site screenshots: 1280×800, light scheme, reduced motion, page clock fixed at a weekday 6 PM IST | Three of the sites show a live open/closed badge. Captured in the evening, they said "Closed now". |
+| 2026-10-28 | In each sample cell, the "Sample site" chip sits beside the name, and goes under it in every cell below 310 px of cell width (a container query) | With a plain wrap, long names pushed the chip down in some cells only, and the rows stopped lining up. |
+| 2026-10-28 | `Reveal` reveals if ANY entry in an observer batch intersects. The hero parallax reads the newest entry | A batch can start with a stale "not intersecting" entry when the page jumps right after mount. Reading only `entries[0]` left the samples panel hidden after 5 of 6 jumps, and deep links such as `/#projects` from `/services/` were exposed too (DESIGN.md §9.1). |
 
 ## Useful local tooling
 
@@ -164,6 +176,19 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
   - Contrast floor 4.58:1.
   - Frost peak: 5 per viewport.
   - Refract surfaces: 3 on `/`, 2 on `/services/`.
+- **2026-09-26.** Upendra committed the QA pass as e909997 and pushed it. Vercel shows the portfolio
+  deployed that day (live at https://portfolio.upendra.site).
+- **2026-10-28.** Added the six sample business sites (PRD R3.1).
+  - **Found** on Upendra's Vercel account (`vercel project ls`), each with its source folder next to this
+    repo (`../Static_websites/`). Copy was checked against each live site, rendered on 2026-10-28.
+  - **Built:** `sampleSites` and `sampleSitesIntro` in `profile.js`; the grid and its index capsule in
+    `LiveWork.jsx` and `work.css`; one row in the `/services/` live list; sample links on the Business
+    website type; the business-websites proof now names the samples (`proofHref` points it at the grid);
+    Astro added to Skills; the hero count includes the samples.
+  - **Fixed:** `Reveal` and the hero parallax read every observer entry (see the decisions log).
+  - **Measured** on the production build: see PRD §8 (R3.1). In short: 0 overflow, console errors or broken
+    images in 24 runs; contrast floor 5.43:1; frost peak 6 (Work 3); CLS 0; Lighthouse mobile unchanged
+    against the previous commit; Firefox passes. WebKit could not be launched here this time.
 
 ## Findings about the live sites (for Upendra, not for the portfolio page)
 
@@ -181,16 +206,34 @@ requirements and [`TODO.md`](TODO.md) for the checklist.
 - **Omni Panel:** the `/billing` route redirects signed-out visitors to `/login`. The real billing
   route is `/bills`.
 
+Found on 2026-10-28:
+
+- **Rawat Motors:** every WhatsApp link is `https://wa.me/?text=…` with no phone number, so a message
+  never reaches the workshop: WhatsApp asks the visitor to pick a contact. Add the workshop's WhatsApp
+  number once it is confirmed. The portfolio card does not mention WhatsApp for this site.
+- **Tripathi Clinic:** the live site still shows the clinic and doctor photos copied from Practo, with
+  Practo's watermark. The project's own `CREDITS.md` says to replace them and get the clinic's OK before
+  going public. The portfolio screenshot shows only the hero, whose photos are Unsplash stock.
+- **Personal blog:** https://upendra-blogs.vercel.app returns 404 at its home page, though the GitHub
+  repo's description links to it.
+- **AI Content Optimizer:** the API on Render still did not answer on 2026-10-28 (4 paths, 60 s
+  each), so the "analysis service offline" note stays.
+
 ## Open questions for Upendra
 
 - **AI Content Optimizer:** its analysis API on Render (`ai-content-optimizer-api.onrender.com`) was
-  still not answering on 2026-09-26, so its card says the analysis service is offline. When the API is
+  still not answering on 2026-10-28, so its card says the analysis service is offline. When the API is
   back, remove `note` and `noteShort` from that entry in `profile.js`.
+- **Sites not live yet:** Sri Prabha Homeo Clinic (`../Static_websites/sri-prabha-homeo-clinic`) and Gaon
+  Samadhan, the Bareja village portal (`../Bareja-Website`). Add them to `sampleSites` (or, for Gaon
+  Samadhan, as a project) once they are deployed.
 - **Postman:** is it really used daily? If so, set `daily: true`. The Skills count updates by itself.
 - **Degree name:** the MCA entry is now shown as "Master of Computer Applications (MCA)" instead of
   IGNOU's programme code "MCA_NEW". Confirm this is right.
 - **Projects and live sites:** are Omni Panel (next.bol7.com) and Hotel Express the same products as
   the CV's "Microservice SaaS Platform" and "Multi-Vendor Hotel & Food Ordering Platform"? If so,
   those project cards could link to the live sites. For now they are deliberately left unlinked.
-- **Deploys:** 1ed348c (the first version of the redesign) was pushed to `main`. If Vercel is
-  connected, that version is already live. The QA fixes are not committed yet.
+- **Deploys:** a push to `main` deploys straight to production. On 2026-10-28 the history was rewritten
+  to drop Claude's co-author lines from the two earliest commits, so every commit ID changed and
+  publishing it takes a force push. The old history is kept in the local branch
+  `backup/before-contributor-cleanup` until Upendra deletes it.
